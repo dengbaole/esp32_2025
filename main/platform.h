@@ -2,10 +2,13 @@
 #define _PLATFORM_H
 
 #include <stdio.h>
+#include <string.h>
 #include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 #include "freertos/task.h"
 #include "esp_log.h"
 #include "esp_task_wdt.h"
+
 
 
 
