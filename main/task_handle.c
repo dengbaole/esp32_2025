@@ -1,22 +1,31 @@
 #include "task_handle.h"
 
+#define NUM0_BIT BIT0
+#define NUM1_BIT BIT1
 
-SemaphoreHandle_t bin_sem;
+static EventGroupHandle_t test_event;
 
 void task_handle(void* pvParameters) { 
-	//释放信号量
+	//定时设置不同的事件位
 	while(1) {
-		xSemaphoreGive(bin_sem);
+		xEventGroupSetBits(test_event, NUM0_BIT);
+		vTaskDelay(pdMS_TO_TICKS(1000));
+		xEventGroupSetBits(test_event, NUM1_BIT);
 		vTaskDelay(pdMS_TO_TICKS(1000));
 	}
 }
 
 
 void task_handle2(void* pvParameters) {
-	//等待信号量
+	EventBits_t ev;
+	//打印事件位
 	while(1) {
-		if(pdTRUE == xSemaphoreTake(bin_sem, portMAX_DELAY)) {
-			ESP_LOGI("bin", "Semaphore taken");
+		ev = xEventGroupWaitBits(test_event, NUM0_BIT | NUM1_BIT, pdTRUE, pdFALSE, portMAX_DELAY);
+		if(ev & NUM0_BIT) {
+			printf("NUM0_BIT\n");
+		}
+		if(ev & NUM1_BIT) {
+			printf("NUM1_BIT\n");
 		}
 	}
 }
@@ -25,7 +34,7 @@ void task_handle2(void* pvParameters) {
 
 
 void task_init(void) {
-	bin_sem = xSemaphoreCreateBinary();
+	test_event = xEventGroupCreate();
 	xTaskCreatePinnedToCore(task_handle, "task_handle", 2048, NULL, 10, NULL, 1);
 	xTaskCreatePinnedToCore(task_handle2, "task_handle2", 2048, NULL, 10, NULL, 1);
 }
