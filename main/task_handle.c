@@ -1,41 +1,31 @@
 #include "task_handle.h"
 
-#define NUM0_BIT BIT0
-#define NUM1_BIT BIT1
 
-static EventGroupHandle_t test_event;
+#define LED_GPIO GPIO_NUM_2
 
-void task_handle(void* pvParameters) { 
-	//定时设置不同的事件位
+
+void led_handle(void* pvParameters) { 
+	static int led_state = 0;
 	while(1) {
-		xEventGroupSetBits(test_event, NUM0_BIT);
 		vTaskDelay(pdMS_TO_TICKS(1000));
-		xEventGroupSetBits(test_event, NUM1_BIT);
-		vTaskDelay(pdMS_TO_TICKS(1000));
+		led_state = !led_state;
+		gpio_set_level(LED_GPIO, led_state);
 	}
 }
 
-
-void task_handle2(void* pvParameters) {
-	EventBits_t ev;
-	//打印事件位
-	while(1) {
-		ev = xEventGroupWaitBits(test_event, NUM0_BIT | NUM1_BIT, pdTRUE, pdFALSE, portMAX_DELAY);
-		if(ev & NUM0_BIT) {
-			printf("NUM0_BIT\n");
-		}
-		if(ev & NUM1_BIT) {
-			printf("NUM1_BIT\n");
-		}
-	}
-}
 
 
 
 
 void task_init(void) {
-	test_event = xEventGroupCreate();
-	xTaskCreatePinnedToCore(task_handle, "task_handle", 2048, NULL, 10, NULL, 1);
-	xTaskCreatePinnedToCore(task_handle2, "task_handle2", 2048, NULL, 10, NULL, 1);
+	gpio_config_t io_conf = {
+		.intr_type = GPIO_INTR_DISABLE,
+		.mode = GPIO_MODE_OUTPUT,
+		.pin_bit_mask = (1ULL << LED_GPIO),
+		.pull_down_en = 0,
+		.pull_up_en = 0
+	};
+	gpio_config(&io_conf);
+	xTaskCreatePinnedToCore(led_handle, "led_handle", 2048, NULL, 10, NULL, 1);
 }
 
