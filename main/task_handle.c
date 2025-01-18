@@ -1,31 +1,46 @@
-#include "task_handle.h"
-
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/gpio.h"
+#include "driver/ledc.h"
+#include "esp_log.h"
 
 #define LED_GPIO GPIO_NUM_2
 
-
-void led_handle(void* pvParameters) { 
-	static int led_state = 0;
-	while(1) {
-		vTaskDelay(pdMS_TO_TICKS(1000));
-		led_state = !led_state;
-		gpio_set_level(LED_GPIO, led_state);
-	}
-}
-
-
-
-
-
 void task_init(void) {
-	gpio_config_t io_conf = {
-		.intr_type = GPIO_INTR_DISABLE,
-		.mode = GPIO_MODE_OUTPUT,
-		.pin_bit_mask = (1ULL << LED_GPIO),
-		.pull_down_en = 0,
-		.pull_up_en = 0
-	};
-	gpio_config(&io_conf);
-	xTaskCreatePinnedToCore(led_handle, "led_handle", 2048, NULL, 10, NULL, 1);
-}
+    // 配置 GPIO
+    gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
 
+    // 配置 LEDC
+    ledc_timer_config_t ledc_timer = {
+        .duty_resolution = LEDC_TIMER_13_BIT,
+        .freq_hz = 5000,
+        .speed_mode = LEDC_HIGH_SPEED_MODE,
+        .timer_num = LEDC_TIMER_0,
+        .clk_cfg = LEDC_AUTO_CLK
+    };
+    ledc_timer_config(&ledc_timer);
+
+    ledc_channel_config_t ledc_channel = {
+        .channel = LEDC_CHANNEL_0,
+        .timer_sel = LEDC_TIMER_0,
+        .duty = 0,
+        .gpio_num = LED_GPIO,
+        .intr_type = LEDC_INTR_DISABLE,
+        .speed_mode = LEDC_HIGH_SPEED_MODE,
+    };
+    ledc_channel_config(&ledc_channel);
+
+    // LED 渐变效果
+    while (1) {
+        for (int duty = 0; duty <= 8191; duty += 100) {
+            ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0, duty);
+            ledc_update_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0);
+            vTaskDelay(10 / portTICK_PERIOD_MS);
+        }
+        for (int duty = 8191; duty >= 0; duty -= 100) {
+            ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0, duty);
+            ledc_update_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0);
+            vTaskDelay(10 / portTICK_PERIOD_MS);
+        }
+    }
+}
