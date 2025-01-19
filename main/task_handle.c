@@ -1,6 +1,6 @@
 #include "platform.h" 
 
-#define LED_GPIO GPIO_NUM_4
+
 
 void task_init(void) {
     // 配置 GPIO
