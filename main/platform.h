@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
@@ -17,6 +18,7 @@
 
 #include "task_handle.h"
 #include "iic_drv.h"
+#include "qmi8658_iic_drv.h"
 
 
 #define LED_GPIO GPIO_NUM_4
@@ -24,6 +26,7 @@
 #define IIC_SCL_PIN GPIO_NUM_45
 #define IIC_PORT 0
 #define IIC_CLK_SPEED 400000
+
 
 
 
