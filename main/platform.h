@@ -13,12 +13,16 @@
 #include "esp_log.h"
 #include "esp_task_wdt.h"
 
+#include "esp_vfs_fat.h"
+#include "sdmmc_cmd.h"
+#include "driver/sdmmc_host.h"
 
 
 
 #include "task_handle.h"
 #include "iic_drv.h"
 #include "qmi8658_iic_drv.h"
+#include "sd_drv.h"
 
 
 #define LED_GPIO GPIO_NUM_4

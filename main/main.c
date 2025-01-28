@@ -9,6 +9,7 @@ void app_main(void) {
 	ESP_LOGI(TAG, "IIC init success");
 	qmi8658_iic_init();
 	task_init();
+	sdcard_test();
 	while(1) {
 		//ESP_LOGI(TAG, "Running task...");
 		esp_task_wdt_reset(); // 重置看门狗
