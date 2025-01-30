@@ -9,12 +9,14 @@ static const char *TAG = "SD_DRV";
 
 
 // 写文件内容 path是路径 data是内容
+// 写文件内容 path是路径 data是内容
 static esp_err_t s_example_write_file(const char *path, char *data)
 {
     ESP_LOGI(TAG, "Opening file %s", path);
     FILE *f = fopen(path, "w");   // 以只写方式打开路径中文件
     if (f == NULL) {
-        ESP_LOGE(TAG, "Failed to open file for writing"); 
+        ESP_LOGE(TAG, "Failed to open file for writing");
+        perror("Error opening file"); // 打印详细错误信息
         return ESP_FAIL;
     }
     fprintf(f, data); // 写入内容
@@ -23,7 +25,6 @@ static esp_err_t s_example_write_file(const char *path, char *data)
 
     return ESP_OK;
 }
-
 // 读文件内容 path是路径
 static esp_err_t s_example_read_file(const char *path)
 {
@@ -51,7 +52,8 @@ static esp_err_t s_example_read_file(const char *path)
 
 void sdcard_test(void) {
     esp_err_t ret;
-
+    gpio_set_direction(BSP_SD_CS, GPIO_MODE_OUTPUT); // 设置为输出模式
+    gpio_set_level(BSP_SD_CS, 1); 
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
         .format_if_mount_failed = true,   // 如果挂载不成功是否需要格式化SD卡
         .max_files = 5, // 允许打开的最大文件数
@@ -86,7 +88,7 @@ void sdcard_test(void) {
     sdmmc_card_print_info(stdout, card); // 终端打印SD卡的一些信息
 
     // 新建一个txt文件 并且给文件中写入几个字符
-    const char *file_hello = MOUNT_POINT"/你好hello.txt";
+    const char *file_hello = MOUNT_POINT"/hello.txt";
     char data[EXAMPLE_MAX_CHAR_SIZE];
     snprintf(data, EXAMPLE_MAX_CHAR_SIZE, "%s %s!\n", "你好hello先生", card->cid.name);
     ret = s_example_write_file(file_hello, data);
