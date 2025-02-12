@@ -11,12 +11,12 @@ static const char* TAG = "task_handle";
 void task_handle(void* pvParameters) { 
 	//定时设置不同的事件位
 	while(1) {
-          esp_task_wdt_reset(); // 重置看门狗
-          vTaskDelay(pdMS_TO_TICKS(1000));
-		// xEventGroupSetBits(test_event, NUM0_BIT);
-		// vTaskDelay(pdMS_TO_TICKS(1000));
-		// xEventGroupSetBits(test_event, NUM1_BIT);
-		// vTaskDelay(pdMS_TO_TICKS(1000));
+        //   esp_task_wdt_reset(); // 重置看门狗
+        //   vTaskDelay(pdMS_TO_TICKS(1000));
+		xEventGroupSetBits(test_event, NUM0_BIT);
+		vTaskDelay(pdMS_TO_TICKS(1000));
+		xEventGroupSetBits(test_event, NUM1_BIT);
+		vTaskDelay(pdMS_TO_TICKS(1000));
 	}
 }
 
@@ -26,17 +26,16 @@ void task_handle2(void* pvParameters) {
 	//打印事件位
 	led_init();
 	while(1) {
-		// ev = xEventGroupWaitBits(test_event, NUM0_BIT | NUM1_BIT, pdTRUE, pdFALSE, portMAX_DELAY);
-		// if(ev & NUM0_BIT) {
-		// 	printf("NUM0_BIT\n");
-		// 	led_on();
-		// }
-		// if(ev & NUM1_BIT) {
-		// 	printf("NUM1_BIT\n");
-		// 	led_off();
-		// }
+		ev = xEventGroupWaitBits(test_event, NUM0_BIT | NUM1_BIT, pdTRUE, pdFALSE, portMAX_DELAY);
+		if(ev & NUM0_BIT) {
+			printf("NUM0_BIT\n");
+			led_on();
+		}
+		if(ev & NUM1_BIT) {
+			printf("NUM1_BIT\n");
+			led_off();
+		}
 
-        esp_task_wdt_reset(); // 重置看门狗
 		vTaskDelay(pdMS_TO_TICKS(1000)); // 延时1秒
         qmi8658_fetch_angleFromAcc(&QMI8658);   // 获取XYZ轴的倾角
         // 输出XYZ轴的倾角
