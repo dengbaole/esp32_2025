@@ -9,5 +9,5 @@
 
 void wifi_scan_m(void);
 // void wifi_init(void);
-void wifi_connect(const char *ssid, const char *password);
+void wifi_connect(const char* ssid, const char* password);
 #endif
