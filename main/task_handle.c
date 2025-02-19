@@ -64,6 +64,6 @@ void task_init(void) {
 	if (xTaskCreatePinnedToCore(task_handle_qmi8658, "task_handle_qmi8658", 4096, NULL, 10, NULL, 1) != pdPASS) {
 		ESP_LOGE(TAG, "Failed to create task_handle_qmi8658");
 	}
-	
+
 	// xTaskCreatePinnedToCore(wifi_handle, "wifi_handle", 4096, NULL, 10, NULL, 0);
 }

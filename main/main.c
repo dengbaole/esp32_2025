@@ -12,10 +12,9 @@ void app_main(void) {
 		ret = nvs_flash_init();
 	}
 	sdcard_test();
-	// i2c0_master = iic_init(I2C_NUM_0);
-	iic_init(I2C_NUM_0);
+	i2c0_master = iic_init(I2C_NUM_0);
 	qmi8658_iic_init();
-	// xl9555_init(i2c0_master);
+	xl9555_init(i2c0_master);
 	ESP_ERROR_CHECK( ret );
 	task_init();
 	while(1) {

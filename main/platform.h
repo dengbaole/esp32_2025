@@ -22,7 +22,12 @@
 #include "esp_event.h"
 #include "nvs_flash.h"
 
-
+typedef struct _i2c_obj_t {
+	i2c_port_t port;
+	gpio_num_t scl;
+	gpio_num_t sda;
+	esp_err_t init_flag;
+} i2c_obj_t;
 
 #include "iic_drv.h"
 #include "task_handle.h"
@@ -30,7 +35,10 @@
 #include "sd_drv.h"
 #include "wifi_scan.h"
 #include "led_drv.h"
-// #include "xl9555_iic_drv.h"
+
+#include "xl9555_iic_drv.h"
+
+
 
 
 #define LED_GPIO GPIO_NUM_4
@@ -39,7 +47,6 @@
 #define IIC_PORT 0
 #define IIC_CLK_SPEED 400000
 
-// extern i2c_obj_t i2c0_master;
 
 
 #endif // !_TASK_HANDLE_H

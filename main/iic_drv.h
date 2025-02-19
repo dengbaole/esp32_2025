@@ -3,12 +3,7 @@
 
 #include "platform.h"
 
-typedef struct _i2c_obj_t {
-	i2c_port_t port;
-	gpio_num_t scl;
-	gpio_num_t sda;
-	esp_err_t init_flag;
-} i2c_obj_t;
+
 
 
 
@@ -19,6 +14,7 @@ typedef struct _i2c_buf_t {
 } i2c_buf_t;
 
 extern i2c_obj_t iic_master[I2C_NUM_MAX];
+extern i2c_obj_t i2c0_master;
 
 /* 读写标志位 */
 #define I2C_FLAG_READ                   (0x01)                                                          /* 读标志 */

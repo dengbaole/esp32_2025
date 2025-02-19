@@ -146,7 +146,9 @@ void xl9555_init(i2c_obj_t self) {
 	xl9555_pin_write(BEEP_IO, 1);
 
 	/* 关闭喇叭 */
+
 	xl9555_pin_write(SPK_CTRL_IO, 0);
+	xl9555_pin_write(LEDR_IO, 0);
 }
 
 

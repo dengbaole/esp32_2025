@@ -3,9 +3,12 @@
 #ifndef __XL9555_IIC_DRV_H
 #define __XL9555_IIC_DRV_H
 
-#include "platform.h"
-
 #include "iic_drv.h"
+
+
+
+
+
 /* 引脚与相关参数定义 */
 #define XL9555_INT_IO               GPIO_NUM_3                      /* XL9555_INT引脚 */
 #define XL9555_INT                  gpio_get_level(XL9555_INT_IO)   /* 读取XL9555_INT的电平 */
@@ -49,8 +52,9 @@
 #define LEDR_TOGGLE()    do { xl9555_pin_write(LEDR_IO, !xl9555_pin_read(LEDR_IO)); } while(0)  /* LEDR翻转 */
 
 /* 函数声明 */
-void xl9555_init(i2c_obj_t self);                                   /* 初始化XL9555 */
+
 int xl9555_pin_read(uint16_t pin);                                  /* 获取某个IO状态 */
+void xl9555_init(i2c_obj_t self);                                   /* 初始化XL9555 */
 uint16_t xl9555_pin_write(uint16_t pin, int val);                   /* 控制某个IO的电平 */
 esp_err_t xl9555_read_byte(uint8_t* data, size_t len);              /* 读取XL9555的16位IO值 */
 uint8_t xl9555_key_scan(uint8_t mode);                              /* 扫描按键值 */

@@ -21,6 +21,7 @@
 
 
 i2c_obj_t iic_master[I2C_NUM_MAX];  /* 为IIC0和IIC1分别定义IIC控制块结构体 */
+i2c_obj_t i2c0_master;
 const char* iic_name = "iic.c";
 
 
