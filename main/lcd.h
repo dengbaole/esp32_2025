@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "xl9555.h"
+#include "xl9555_iic_drv.h"
 #include <math.h>
 #include "driver/gpio.h"
 #include "esp_lcd_panel_io.h"

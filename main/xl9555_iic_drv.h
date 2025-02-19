@@ -1,16 +1,11 @@
 
 
-#ifndef __XL9555_H
-#define __XL9555_H
+#ifndef __XL9555_IIC_DRV_H
+#define __XL9555_IIC_DRV_H
 
-#include "driver/gpio.h"
-#include "esp_err.h"
-#include "esp_log.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "platform.h"
+
 #include "iic_drv.h"
-
-
 /* 引脚与相关参数定义 */
 #define XL9555_INT_IO               GPIO_NUM_3                      /* XL9555_INT引脚 */
 #define XL9555_INT                  gpio_get_level(XL9555_INT_IO)   /* 读取XL9555_INT的电平 */

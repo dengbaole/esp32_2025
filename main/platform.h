@@ -24,14 +24,13 @@
 
 
 
-
-#include "task_handle.h"
 #include "iic_drv.h"
+#include "task_handle.h"
 #include "qmi8658_iic_drv.h"
 #include "sd_drv.h"
 #include "wifi_scan.h"
 #include "led_drv.h"
-
+// #include "xl9555_iic_drv.h"
 
 
 #define LED_GPIO GPIO_NUM_4
@@ -40,7 +39,7 @@
 #define IIC_PORT 0
 #define IIC_CLK_SPEED 400000
 
-
+// extern i2c_obj_t i2c0_master;
 
 
 #endif // !_TASK_HANDLE_H

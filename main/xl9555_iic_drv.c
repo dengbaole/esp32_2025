@@ -1,5 +1,5 @@
 
-#include "xl9555.h"
+#include "xl9555_iic_drv.h"
 
 
 i2c_obj_t xl9555_i2c_master;

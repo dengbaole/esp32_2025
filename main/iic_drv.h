@@ -3,18 +3,15 @@
 
 #include "platform.h"
 
-#include "driver/gpio.h"
-#include "driver/i2c.h"
-#include "esp_err.h"
-#include "esp_log.h"
-
-
 typedef struct _i2c_obj_t {
 	i2c_port_t port;
 	gpio_num_t scl;
 	gpio_num_t sda;
 	esp_err_t init_flag;
 } i2c_obj_t;
+
+
+
 
 typedef struct _i2c_buf_t {
 	size_t len;
