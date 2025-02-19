@@ -21,7 +21,7 @@ void task_handle(void* pvParameters) {
 }
 
 
-void task_handle2(void* pvParameters) {
+void task_handle_qmi8658(void* pvParameters) {
 	EventBits_t ev;
 	//打印事件位
 	led_init();
@@ -43,15 +43,10 @@ void task_handle2(void* pvParameters) {
 	}
 }
 
+
+
 void wifi_handle(void* pvParameters) {
-	EventBits_t ev;
 	//打印事件位
-	esp_err_t ret = nvs_flash_init();
-	if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-		ESP_ERROR_CHECK(nvs_flash_erase());
-		ret = nvs_flash_init();
-	}
-	ESP_ERROR_CHECK( ret );
 
 	wifi_scan_m();
 	// wifi_connect(2403,18649682167);
@@ -66,8 +61,9 @@ void task_init(void) {
 	if (xTaskCreatePinnedToCore(task_handle, "task_handle", 2048, NULL, 10, NULL, 1) != pdPASS) {
 		ESP_LOGE(TAG, "Failed to create task_handle");
 	}
-	if (xTaskCreatePinnedToCore(task_handle2, "task_handle2", 4096, NULL, 10, NULL, 1) != pdPASS) {
-		ESP_LOGE(TAG, "Failed to create task_handle2");
+	if (xTaskCreatePinnedToCore(task_handle_qmi8658, "task_handle_qmi8658", 4096, NULL, 10, NULL, 1) != pdPASS) {
+		ESP_LOGE(TAG, "Failed to create task_handle_qmi8658");
 	}
+	
 	// xTaskCreatePinnedToCore(wifi_handle, "wifi_handle", 4096, NULL, 10, NULL, 0);
 }

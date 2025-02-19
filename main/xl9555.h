@@ -8,7 +8,7 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "iic.h"
+#include "iic_drv.h"
 
 
 /* 引脚与相关参数定义 */
