@@ -15,6 +15,10 @@ void app_main(void) {
 	i2c0_master = iic_init(I2C_NUM_0);
 	qmi8658_iic_init();
 	xl9555_init(i2c0_master);
+	lcd_cfg_t lcd_config_info = {0};
+    lcd_config_info.notify_flush_ready = NULL;
+	lcd_init(lcd_config_info); 
+	lcd_draw_circle(100,100,50,BLUE);
 	ESP_ERROR_CHECK( ret );
 	task_init();
 	while(1) {

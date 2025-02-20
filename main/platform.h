@@ -37,6 +37,7 @@ typedef struct _i2c_obj_t {
 #include "led_drv.h"
 
 #include "xl9555_iic_drv.h"
+#include "lcd_80bus.h"
 
 
 
