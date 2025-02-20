@@ -15,8 +15,10 @@ void led_init(void) {
 
 void led_on(void) {
 	gpio_set_level(LED_GPIO, 1);
+	xl9555_pin_write(LEDR_IO, 0);
 }
 
 void led_off(void) {
 	gpio_set_level(LED_GPIO, 0);
+	xl9555_pin_write(LEDR_IO, 1);
 }

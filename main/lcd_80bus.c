@@ -170,40 +170,44 @@ void lcd_draw_rectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint
 // }
 
 void lcd_draw_circle(uint16_t x0, uint16_t y0, uint8_t r, uint16_t color) {
-    int_fast16_t a = 0;
-    int_fast16_t b = r;
-    int_fast16_t di = 3 - 2 * r;  // 优化初始值计算
+	int_fast16_t a = 0;
+	int_fast16_t b = r;
+	int_fast16_t di = 3 - 2 * r;  // 优化初始值计算
 
-    /* 对称点坐标缓存 */
-    int_fast16_t xa, xa_, ya, ya_;
-    int_fast16_t xb, xb_, yb, yb_;
+	/* 对称点坐标缓存 */
+	int_fast16_t xa, xa_, ya, ya_;
+	int_fast16_t xb, xb_, yb, yb_;
 
-    while (a <= b) {
-        // 预计算对称坐标
-        xa = x0 + a; xa_ = x0 - a;
-        xb = x0 + b; xb_ = x0 - b;
-        ya = y0 + a; ya_ = y0 - a;
-        yb = y0 + b; yb_ = y0 - b;
+	while (a <= b) {
+		// 预计算对称坐标
+		xa = x0 + a;
+		xa_ = x0 - a;
+		xb = x0 + b;
+		xb_ = x0 - b;
+		ya = y0 + a;
+		ya_ = y0 - a;
+		yb = y0 + b;
+		yb_ = y0 - b;
 
-        // 一次绘制八个对称点
-        lcd_draw_point(xa, yb_, color);  // 5 -> 1
-        lcd_draw_point(xb, ya_, color);  // 0 -> 2
-        lcd_draw_point(xb, ya,  color);  // 4 -> 3
-        lcd_draw_point(xa, yb,  color);  // 6 -> 4
-        lcd_draw_point(xa_, yb, color);  // 1 -> 5
-        lcd_draw_point(xb_, ya, color);  // 7 -> 6
-        lcd_draw_point(xa_, yb_,color);  // 2 -> 7
-        lcd_draw_point(xb_, ya_,color);  // 8 -> 0
+		// 一次绘制八个对称点
+		lcd_draw_point(xa, yb_, color);  // 5 -> 1
+		lcd_draw_point(xb, ya_, color);  // 0 -> 2
+		lcd_draw_point(xb, ya,  color);  // 4 -> 3
+		lcd_draw_point(xa, yb,  color);  // 6 -> 4
+		lcd_draw_point(xa_, yb, color);  // 1 -> 5
+		lcd_draw_point(xb_, ya, color);  // 7 -> 6
+		lcd_draw_point(xa_, yb_, color); // 2 -> 7
+		lcd_draw_point(xb_, ya_, color); // 8 -> 0
 
-        // Bresenham算法优化
-        if (di < 0) {
-            di += (a << 2) + 6;  // 用移位代替乘法
-        } else {
-            di += ((a - b) << 2) + 10;
-            b--;
-        }
-        a++;
-    }
+		// Bresenham算法优化
+		if (di < 0) {
+			di += (a << 2) + 6;  // 用移位代替乘法
+		} else {
+			di += ((a - b) << 2) + 10;
+			b--;
+		}
+		a++;
+	}
 }
 
 void lcd_show_char(uint16_t x, uint16_t y, char chr, uint8_t size, uint8_t mode, uint16_t color) {

@@ -8,10 +8,7 @@
 
 
 
-typedef struct _i2c_buf_t {
-	size_t len;
-	uint8_t* buf;
-} i2c_buf_t;
+
 
 extern i2c_obj_t iic_master[I2C_NUM_MAX];
 extern i2c_obj_t i2c0_master;
@@ -33,7 +30,6 @@ extern i2c_obj_t i2c0_master;
 
 /* 函数声明 */
 i2c_obj_t iic_init(uint8_t iic_port);                                                                   /* 初始化IIC */
-esp_err_t i2c_transfer(i2c_obj_t* self, uint16_t addr, size_t n, i2c_buf_t* bufs, unsigned int flags);  /* IIC读写数据 */
 
 
 #endif /* _IIC_DRV_H_ */

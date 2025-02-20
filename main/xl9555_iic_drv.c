@@ -6,26 +6,16 @@ i2c_obj_t xl9555_i2c_master;
 const char* xl9555_name = "xl9555.c";
 
 
-esp_err_t xl9555_read_byte(uint8_t* data, size_t len) {
-	uint8_t memaddr_buf[1];
-	memaddr_buf[0]  = XL9555_INPUT_PORT0_REG;
-
-	i2c_buf_t bufs[2] = {
-		{.len = 1, .buf = memaddr_buf},
-		{.len = len, .buf = data},
-	};
-
-	return i2c_transfer(&xl9555_i2c_master, XL9555_ADDR, 2, bufs, I2C_FLAG_WRITE | I2C_FLAG_READ | I2C_FLAG_STOP);
+esp_err_t xl9555_read_byte(uint8_t reg_addr, uint8_t* data, size_t len) {
+	return i2c_master_write_read_device(IIC_PORT, XL9555_ADDR, &reg_addr, 1, data, len, 1000 / portTICK_PERIOD_MS);
 }
 
 
 esp_err_t xl9555_write_byte(uint8_t reg, uint8_t* data, size_t len) {
-	i2c_buf_t bufs[2] = {
-		{.len = 1, .buf = &reg},
-		{.len = len, .buf = data},
-	};
-
-	return i2c_transfer(&xl9555_i2c_master, XL9555_ADDR, 2, bufs, I2C_FLAG_STOP);
+	uint8_t write_buf[len + 1];
+	write_buf[0] = reg;
+	memcpy(write_buf + 1, data, len);
+	return i2c_master_write_to_device(IIC_PORT, XL9555_ADDR, write_buf, len + 1, 1000 / portTICK_PERIOD_MS);
 }
 
 
@@ -33,7 +23,7 @@ uint16_t xl9555_pin_write(uint16_t pin, int val) {
 	uint8_t w_data[2];
 	uint16_t temp = 0x0000;
 
-	xl9555_read_byte(w_data, 2);
+	xl9555_read_byte(XL9555_INPUT_PORT0_REG, w_data, 2);
 
 	if (pin <= LCD_BL_IO) {
 		if (val) {
@@ -61,7 +51,7 @@ int xl9555_pin_read(uint16_t pin) {
 	uint16_t ret;
 	uint8_t r_data[2];
 
-	xl9555_read_byte(r_data, 2);
+	xl9555_read_byte(XL9555_INPUT_PORT0_REG, r_data, 2);
 
 	ret = r_data[1] << 8 | r_data[0];
 
@@ -137,7 +127,7 @@ void xl9555_init(i2c_obj_t self) {
 	// xl9555_int_init();
 
 	/* 上电先读取一次清除中断标志 */
-	xl9555_read_byte(r_data, 2);
+	xl9555_read_byte(XL9555_INPUT_PORT0_REG, r_data, 2);
 
 	/* 配置那些扩展管脚为输入输出模式 */
 	xl9555_ioconfig(0xFE1B);
@@ -148,7 +138,7 @@ void xl9555_init(i2c_obj_t self) {
 	/* 关闭喇叭 */
 
 	xl9555_pin_write(SPK_CTRL_IO, 0);
-	xl9555_pin_write(LEDR_IO, 0);
+
 }
 
 
