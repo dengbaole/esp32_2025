@@ -25,7 +25,7 @@ uint16_t xl9555_pin_write(uint16_t pin, int val) {
 
 	xl9555_read_byte(XL9555_INPUT_PORT0_REG, w_data, 2);
 
-	if (pin <= LCD_BL_IO) {
+	if (pin <= 0x0080) {
 		if (val) {
 			w_data[0] |= (uint8_t)(0xFF & pin);
 		} else {
