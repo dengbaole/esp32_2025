@@ -270,7 +270,7 @@ esp_err_t bsp_lcd_init(void) {
 
 
 	ret = bsp_display_new(); // 液晶屏驱动初始化
-	lcd_set_color(0x0000); // 设置整屏背景黑色
+	lcd_set_color(0x1111); // 设置整屏背景黑色
 	ret = esp_lcd_panel_disp_on_off(panel_handle, true); // 打开液晶屏显示
 	ret = bsp_display_backlight_on(); // 打开背光显示
 

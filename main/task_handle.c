@@ -4,7 +4,9 @@ void task_function(void* pvParameters) {
 	// 从参数中获取任务ID和延迟时间
 	int task_id = ((int*)pvParameters)[0];
 	int delay_ms = ((int*)pvParameters)[1];
-
+	if(task_id == 1) {
+		
+	}
 	while(1) {
 		ESP_LOGI("main", "Task %d running", task_id);
 		vTaskDelay(pdMS_TO_TICKS(delay_ms));
