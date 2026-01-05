@@ -1,9 +1,5 @@
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/event_groups.h"
-#include "driver/gpio.h"
-#include "esp_log.h"
-#include "esp_timer.h"
+
+#include "platform.h"
 
 #define NUM0_BIT BIT0
 #define NUM1_BIT BIT1
@@ -159,9 +155,15 @@ void key_handle_simple(void* pvParameters) {
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
-
+t_sQMI8658 QMI8658; // 定义QMI8658结构体变量
 void task_handle(void* pvParameters) { 
+    ESP_ERROR_CHECK(bsp_i2c_init());  // 初始化I2C总线
+    ESP_LOGI(TAG, "I2C initialized successfully"); // 输出I2C初始化成功的信息
+    qmi8658_init();
     while(1) {
+        qmi8658_fetch_angleFromAcc(&QMI8658);   // 获取XYZ轴的倾角
+        // 输出XYZ轴的倾角
+        ESP_LOGI(TAG, "angle_x = %.1f  angle_y = %.1f angle_z = %.1f",QMI8658.AngleX, QMI8658.AngleY, QMI8658.AngleZ);
         xEventGroupSetBits(test_event, NUM0_BIT);
         vTaskDelay(pdMS_TO_TICKS(1000));
         

@@ -9,5 +9,6 @@ void app_main(void) {
 		// ESP_LOGI(TAG, "Running task...");
 		// esp_task_wdt_reset();			 // 重置看门狗
 		vTaskDelay(pdMS_TO_TICKS(1000)); // 延时1秒
+		 
 	}
 }
