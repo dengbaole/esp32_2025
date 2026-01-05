@@ -7,14 +7,16 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
+#include "driver/i2c.h"
 #include "esp_log.h"
 #include "esp_task_wdt.h"
+#include "esp_err.h"
 
 
 
 
 #include "task_handle.h"
-
+#include "esp32_s3_qmi8658.h"
 
 
 
