@@ -195,18 +195,18 @@ void task_handle2(void* pvParameters) {
 }
 
 void task_init(void) {
-    test_event = xEventGroupCreate();
-    if (test_event == NULL) {
-        ESP_LOGE(TAG, "Failed to create event group!");
-        return;
-    }
+    // test_event = xEventGroupCreate();
+    // if (test_event == NULL) {
+    //     ESP_LOGE(TAG, "Failed to create event group!");
+    //     return;
+    // }
     
-    ESP_LOGI(TAG, "Creating tasks...");
+    // ESP_LOGI(TAG, "Creating tasks...");
     
-    xTaskCreate(task_handle, "task_handle", 4096, NULL, 5, NULL);
-    xTaskCreate(task_handle2, "task_handle2", 4096, NULL, 5, NULL);
-    // 使用简单版本的按键处理函数
-    xTaskCreate(key_handle_simple, "key_handle", 4096, NULL, 6, NULL);
+    // xTaskCreate(task_handle, "task_handle", 4096, NULL, 5, NULL);
+    // xTaskCreate(task_handle2, "task_handle2", 4096, NULL, 5, NULL);
+    // // 使用简单版本的按键处理函数
+    // xTaskCreate(key_handle_simple, "key_handle", 4096, NULL, 6, NULL);
     
-    ESP_LOGI(TAG, "Tasks created successfully");
+    // ESP_LOGI(TAG, "Tasks created successfully");
 }
