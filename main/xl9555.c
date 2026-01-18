@@ -126,14 +126,11 @@ esp_err_t xl9555_ioconfig(uint16_t config_value)
  * @param arg 中断引脚号，在注册中断回调函数时已通过参数带进来
  * @return 无
  */
-static void IRAM_ATTR xl9555_exit_gpio_isr_handler(void *arg)
-{
+static void IRAM_ATTR xl9555_exit_gpio_isr_handler(void *arg) {
     uint32_t gpio_num = (uint32_t) arg;
     BaseType_t task_woken;
-    if (gpio_num == xl9555_isr_io)
-    {
-        if (gpio_get_level(xl9555_isr_io) == 0)
-        {
+    if (gpio_num == xl9555_isr_io) {
+        if (gpio_get_level(xl9555_isr_io) == 0) {
             xEventGroupSetBitsFromISR(xl9555_isr_event,XL9555_ISR_BIT,&task_woken);
         }
     }
@@ -169,27 +166,21 @@ static void xl9555_intput_scan(void* param)
     EventBits_t ev;
     uint16_t last_input = 0;
     xl9555_read_word(XL9555_INPUT_PORT0_REG,&last_input); 
-    while(1)
-    {
+    while(1)  {
         uint16_t input;
         ev = xEventGroupWaitBits(xl9555_isr_event,XL9555_ISR_BIT,pdTRUE,pdFALSE,pdMS_TO_TICKS(10*1000));
-        if(ev & XL9555_ISR_BIT)
-        {
-            if ( gpio_get_level(xl9555_isr_io) != 0)
-            {
+        if(ev & XL9555_ISR_BIT) {
+            if (gpio_get_level(xl9555_isr_io) != 0) {
                 continue;
             }
             ret = xl9555_read_word(XL9555_INPUT_PORT0_REG,&input);        //读取输入寄存器
-            if(ret == ESP_OK)
-            {
-                for(int i = 0;i < 16;i++)
-                {
+            if(ret == ESP_OK) {
+                for(int i = 0;i < 16;i++) {
                     if(xl9555_io_config & (1 <<i))//判断是否已经将对应端口设置为输入
                     {
                         uint8_t value = input&(1<<i)?1:0;
                         uint8_t last_value = last_input&(1<<i)?1:0;
-                        if(value != last_value && xl9555_input_callback)
-                        {
+                        if(value != last_value && xl9555_input_callback) {
                             xl9555_input_callback(1<<i,value);
                         }
                     }
@@ -218,7 +209,7 @@ void xl9555_init(gpio_num_t sda,gpio_num_t scl,gpio_num_t int_io,xl9555_input_cb
         .clk_source = I2C_CLK_SRC_DEFAULT,
         .glitch_ignore_cnt = 7,
         .trans_queue_depth = 0,
-        .flags.enable_internal_pullup = 1,
+        .flags.enable_internal_pullup = 1, 
     };
     i2c_new_master_bus(&bus_config,&xl9555_i2c_master);
 
