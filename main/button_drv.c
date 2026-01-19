@@ -20,7 +20,37 @@ static esp_timer_handle_t g_button_timer_handle;
 
 static void button_handle(void *param);
 
+volatile uint16_t xl9555_button_level = 0xFFFF;
 
+int get_button_level(int gpio) {
+    return (xl9555_button_level&gpio)?1:0;
+}
+
+void short_press(int gpio) {
+    ESP_LOGI(TAG,"Button %d short press",gpio);
+}
+
+void long_press(int gpio) {
+    ESP_LOGI(TAG,"Button %d long press",gpio);
+}
+
+void button_init(void) {
+    button_config_t button_cfg = {
+        .active_level = 0,
+        .getlevel_cb = get_button_level,
+        .gpio_num = IO0_1,
+        .long_cb = long_press,
+        .long_press_time = 3000,
+        .short_cb = short_press,
+    };
+    button_event_set(&button_cfg);
+    button_cfg.gpio_num = IO0_2;
+    button_event_set(&button_cfg);
+    button_cfg.gpio_num = IO0_3;
+    button_event_set(&button_cfg);
+    button_cfg.gpio_num = IO0_4;
+    button_event_set(&button_cfg);
+}
 /** 设置按键事件
  * @param cfg   配置结构体
  * @return ESP_OK or ESP_FAIL 

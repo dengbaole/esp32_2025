@@ -2,11 +2,7 @@
 
 static const char *TAG = "main";
 
-static volatile uint16_t xl9555_button_level = 0xFFFF;
 
-int get_button_level(int gpio) {
-    return (xl9555_button_level&gpio)?1:0;
-}
 
 void xl9555_input_callback(uint16_t io_num,int level) {
     if(level) {
@@ -16,30 +12,21 @@ void xl9555_input_callback(uint16_t io_num,int level) {
     }
 }
 
-void short_press(int gpio) {
-    ESP_LOGI(TAG,"Button %d short press",gpio);
-}
 
-void long_press(int gpio) {
-    ESP_LOGI(TAG,"Button %d long press",gpio);
-}
 
-void button_init(void) {
-    button_config_t button_cfg = {
-        .active_level = 0,
-        .getlevel_cb = get_button_level,
-        .gpio_num = IO0_1,
-        .long_cb = long_press,
-        .long_press_time = 3000,
-        .short_cb = short_press,
-    };
-    button_event_set(&button_cfg);
-    button_cfg.gpio_num = IO0_2;
-    button_event_set(&button_cfg);
-    button_cfg.gpio_num = IO0_3;
-    button_event_set(&button_cfg);
-    button_cfg.gpio_num = IO0_4;
-    button_event_set(&button_cfg);
+#define DEFAULT_WIFI_SSID           "802"
+#define DEFAULT_WIFI_PASSWORD       "aa1550555930"
+
+void wifi_state_handler(WIFI_STATE state)
+{
+    if(state == WIFI_STATE_CONNECTED)
+    {
+        ESP_LOGI(TAG,"Wifi connect success!");
+    }
+    else
+    {
+        ESP_LOGI(TAG,"Wifi disconnect! ");
+    }
 }
 
 
@@ -48,6 +35,13 @@ void app_main(void) {
 	// task_init();
 	// led_init();
 	// led_breath_init();
+
+    //wifi
+    nvs_flash_init();
+    wifi_manager_init(wifi_state_handler);
+    wifi_manager_connect(DEFAULT_WIFI_SSID,DEFAULT_WIFI_PASSWORD);
+
+
 
 	xl9555_init(GPIO_NUM_10,GPIO_NUM_11,GPIO_NUM_17,xl9555_input_callback);
 	xl9555_ioconfig(0xffff);

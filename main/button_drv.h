@@ -1,6 +1,7 @@
 #ifndef _BUTTON_DRV_H_
 #define _BUTTON_DRV_H_
 #include "esp_err.h"
+#include "platform.h"
 
 //按键回调函数
 typedef void(*button_press_cb_t)(int gpio);
@@ -33,12 +34,14 @@ typedef struct Button {
     struct Button* next;        //下一个按键参数
 }button_dev_t;
 
+extern volatile uint16_t xl9555_button_level;
 
 /** 设置按键事件
  * @param cfg   配置结构体
  * @return ESP_OK or ESP_FAIL 
 */
 esp_err_t button_event_set(button_config_t *cfg);
+void button_init(void);
 
 
 #endif

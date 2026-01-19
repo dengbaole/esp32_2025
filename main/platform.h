@@ -9,6 +9,7 @@
 #include "driver/gpio.h"
 #include "driver/i2c.h"
 #include "driver/i2c_master.h"
+#include "nvs_flash.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -24,6 +25,7 @@
 #include "led_drv.h"
 #include "xl9555.h"
 #include "button_drv.h"
+#include "wifi_manager.h"
 
 
 
