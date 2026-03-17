@@ -17,14 +17,10 @@ void xl9555_input_callback(uint16_t io_num,int level) {
 #define DEFAULT_WIFI_SSID           "802"
 #define DEFAULT_WIFI_PASSWORD       "aa1550555930"
 
-void wifi_state_handler(WIFI_STATE state)
-{
-    if(state == WIFI_STATE_CONNECTED)
-    {
+void wifi_state_handler(WIFI_STATE state) {
+    if(state == WIFI_STATE_CONNECTED) {
         ESP_LOGI(TAG,"Wifi connect success!");
-    }
-    else
-    {
+    } else {
         ESP_LOGI(TAG,"Wifi disconnect! ");
     }
 }

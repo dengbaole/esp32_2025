@@ -198,11 +198,9 @@ static void xl9555_intput_scan(void* param)
  * @param f 回调函数用于告知gpio口的电平跳变
  * @return 无 
 */
-void xl9555_init(gpio_num_t sda,gpio_num_t scl,gpio_num_t int_io,xl9555_input_cb_t f)
-{
+void xl9555_init(gpio_num_t sda,gpio_num_t scl,gpio_num_t int_io,xl9555_input_cb_t f) {
     uint16_t r_data;
-    i2c_master_bus_config_t bus_config = 
-    {
+    i2c_master_bus_config_t bus_config = {
         .i2c_port = 1,
         .sda_io_num = sda,
         .scl_io_num = scl,
@@ -213,8 +211,7 @@ void xl9555_init(gpio_num_t sda,gpio_num_t scl,gpio_num_t int_io,xl9555_input_cb
     };
     i2c_new_master_bus(&bus_config,&xl9555_i2c_master);
 
-    i2c_device_config_t dev_config = 
-    {
+    i2c_device_config_t dev_config = {
         .dev_addr_length = I2C_ADDR_BIT_LEN_7,
         .device_address = XL9555_ADDR,
         .scl_speed_hz = 100000,
@@ -226,8 +223,7 @@ void xl9555_init(gpio_num_t sda,gpio_num_t scl,gpio_num_t int_io,xl9555_input_cb
     /* 上电先读取一次清除中断标志 */
     xl9555_read_word(XL9555_INPUT_PORT0_REG,&r_data);
 
-    if(xl9555_isr_io != GPIO_NUM_NC)
-	{
+    if(xl9555_isr_io != GPIO_NUM_NC) {
         xl9555_isr_init();
 		xTaskCreatePinnedToCore(xl9555_intput_scan,"xl9555",4096,NULL,3,NULL,1);
 	}
