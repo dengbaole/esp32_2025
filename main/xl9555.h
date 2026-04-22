@@ -34,16 +34,16 @@
 #define IO1_6                       0x4000
 #define IO1_7                       0x8000
 
-typedef void(*xl9555_input_cb_t)(uint16_t io_num,int level);
+typedef void(*xl9555_input_cb_t)(uint16_t io_num, int level);
 
- /** 初始化xl9555芯片和用到的i2c总线
- * @param sda sda的gpio口
- * @param scl scl的gpio口
- * @param int_io 中断的gpio口
- * @param f 回调函数用于告知gpio口的电平跳变
- * @return 无 
+/** 初始化xl9555芯片和用到的i2c总线
+* @param sda sda的gpio口
+* @param scl scl的gpio口
+* @param int_io 中断的gpio口
+* @param f 回调函数用于告知gpio口的电平跳变
+* @return 无
 */
-void xl9555_init(gpio_num_t sda,gpio_num_t scl,gpio_num_t int_io,xl9555_input_cb_t f);
+void xl9555_init(gpio_num_t sda, gpio_num_t scl, gpio_num_t int_io, xl9555_input_cb_t f);
 
 /** 读取某个gpio口的电平
  * @param pin gpio口
@@ -70,7 +70,7 @@ esp_err_t xl9555_write_word(uint8_t reg, uint16_t data);
  * @param data 寄存器地址的值
  * @return 成功或失败
 */
-esp_err_t xl9555_read_word(uint8_t reg, uint16_t *data); 
+esp_err_t xl9555_read_word(uint8_t reg, uint16_t* data);
 
 /** 设置输入输出
  * @param config_value 配置值，如果对应的位是0，则对应的GPIO口设置为【输出】，如果是1，则为【输入】
