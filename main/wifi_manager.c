@@ -32,7 +32,7 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
 				//WIFI以STA模式启动后触发此事件
 				wifi_mode_t mode;
 				esp_wifi_get_mode(&mode);
-				if(mode == WIFI_MODE_STA)
+				if(mode == WIFI_MODE_STA || mode == WIFI_MODE_APSTA)
 					esp_wifi_connect();         //启动WIFI连接
 				break;
 			}
@@ -48,7 +48,7 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
 				if(sta_connect_count < MAX_CONNECT_RETRY) {
 					wifi_mode_t mode;
 					esp_wifi_get_mode(&mode);
-					if(mode == WIFI_MODE_STA)
+					if(mode == WIFI_MODE_STA || mode == WIFI_MODE_APSTA)
 						esp_wifi_connect();             //继续重连
 					sta_connect_count++;
 				}
@@ -106,15 +106,15 @@ esp_err_t wifi_manager_connect(const char* ssid, const char* password) {
 	sta_connect_count = 0;
 	wifi_config_t wifi_config = {
 		.sta = {
-			.threshold.authmode = WIFI_AUTH_WPA2_PSK,   //加密方式
+			.threshold.authmode = WIFI_AUTH_OPEN,
 		},
 	};
-	snprintf((char*)wifi_config.sta.ssid, 31, "%s", ssid);
-	snprintf((char*)wifi_config.sta.password, 63, "%s", password);
+	strlcpy((char*)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
+	strlcpy((char*)wifi_config.sta.password, password ? password : "", sizeof(wifi_config.sta.password));
 	ESP_ERROR_CHECK(esp_wifi_disconnect());
 	wifi_mode_t mode;
 	esp_wifi_get_mode(&mode);
-	if(mode != WIFI_MODE_STA) {
+	if(mode != WIFI_MODE_STA && mode != WIFI_MODE_APSTA) {
 		ESP_ERROR_CHECK(esp_wifi_stop());
 		ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
 		ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));

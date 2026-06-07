@@ -1,25 +1,14 @@
-/**
- * @file ap_config.c
- * @brief AP 配网模块 — 让ESP32开热点，用户手机输WiFi密码
- *
- * 关键流程：
- *   ap_config_start()  → 开热点 + 启动网页服务器
- *                       手机连上热点 → 浏览器打开 192.168.4.1
- *                       → 用户填SSID/密码提交
- *   handle_post_config() → 保存到NVS → 回调通知main.c去连接
- *   ap_config_stop()    → 连上WiFi后关掉热点
- */
-
 #include "ap_config.h"
+
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
-#include "esp_log.h"
-#include "esp_wifi.h"
-#include "esp_netif.h"
+
 #include "esp_http_server.h"
+#include "esp_log.h"
+#include "esp_netif.h"
+#include "esp_wifi.h"
 #include "nvs_flash.h"
-#include "cJSON.h"
 
 #define TAG "ap_config"
 
@@ -27,13 +16,17 @@
 #define NVS_KEY_SSID    "ssid"
 #define NVS_KEY_PASS    "password"
 
-static httpd_handle_t       s_server     = NULL;
-static p_ap_config_callback s_cb         = NULL;
-static char                 s_received_ssid[32] = {0};
-static char                 s_received_pass[64] = {0};
-static bool                 s_config_done       = false;
+#define FORM_BODY_MAX_LEN   256
+#define SSID_BUF_LEN        33
+#define PASS_BUF_LEN        65
 
-/* 配网页面的HTML，存在flash里省内存 */
+static httpd_handle_t       s_server = NULL;
+static esp_netif_t         *s_ap_netif = NULL;
+static p_ap_config_callback s_cb = NULL;
+static char                 s_received_ssid[SSID_BUF_LEN] = {0};
+static char                 s_received_pass[PASS_BUF_LEN] = {0};
+static bool                 s_config_done = false;
+
 static const char *s_index_html = ""
 "<!DOCTYPE html>"
 "<html><head>"
@@ -65,12 +58,87 @@ static const char *s_index_html = ""
 "</div>"
 "</body></html>";
 
+static int hex_to_int(char c)
+{
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+}
 
-/* ================================================================
- * HTTP 请求处理
- * ================================================================ */
+static void url_decode_component(char *dst, size_t dst_len, const char *src, size_t src_len)
+{
+    size_t di = 0;
 
-/* GET /  → 返回配网页 */
+    if (dst_len == 0) return;
+
+    for (size_t si = 0; si < src_len && di < dst_len - 1; si++) {
+        if (src[si] == '+') {
+            dst[di++] = ' ';
+        } else if (src[si] == '%' && si + 2 < src_len) {
+            int hi = hex_to_int(src[si + 1]);
+            int lo = hex_to_int(src[si + 2]);
+            if (hi >= 0 && lo >= 0) {
+                dst[di++] = (char)((hi << 4) | lo);
+                si += 2;
+            } else {
+                dst[di++] = src[si];
+            }
+        } else {
+            dst[di++] = src[si];
+        }
+    }
+
+    dst[di] = '\0';
+}
+
+static bool get_form_value(const char *body, const char *key, char *out, size_t out_len)
+{
+    const size_t key_len = strlen(key);
+    const char *field = body;
+
+    while (field && *field) {
+        const char *next = strchr(field, '&');
+        const char *eq = strchr(field, '=');
+        size_t field_len = next ? (size_t)(next - field) : strlen(field);
+
+        if (eq && eq < field + field_len &&
+            (size_t)(eq - field) == key_len &&
+            strncmp(field, key, key_len) == 0) {
+            const char *value = eq + 1;
+            url_decode_component(out, out_len, value, field_len - (size_t)(value - field));
+            return true;
+        }
+
+        field = next ? next + 1 : NULL;
+    }
+
+    if (out_len > 0) out[0] = '\0';
+    return false;
+}
+
+static esp_err_t recv_request_body(httpd_req_t *req, char *buf, size_t buf_len)
+{
+    int received = 0;
+    int remaining = req->content_len;
+
+    if (remaining <= 0 || remaining >= (int)buf_len) {
+        return ESP_ERR_INVALID_SIZE;
+    }
+
+    while (remaining > 0) {
+        int ret = httpd_req_recv(req, buf + received, remaining);
+        if (ret <= 0) {
+            return ESP_FAIL;
+        }
+        received += ret;
+        remaining -= ret;
+    }
+
+    buf[received] = '\0';
+    return ESP_OK;
+}
+
 static esp_err_t handle_get_root(httpd_req_t *req)
 {
     httpd_resp_set_type(req, "text/html; charset=utf-8");
@@ -78,52 +146,26 @@ static esp_err_t handle_get_root(httpd_req_t *req)
     return ESP_OK;
 }
 
-/* POST /api/config  → 接收用户提交的WiFi信息 */
 static esp_err_t handle_post_config(httpd_req_t *req)
 {
-    /* 接收浏览器发来的数据，格式：ssid=xxx&password=*** */
-    char buf[256] = {0};
-    int ret, remaining = req->content_len;
-    if (remaining >= (int)sizeof(buf)) {
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Too large");
-        return ESP_FAIL;
-    }
-    ret = httpd_req_recv(req, buf, remaining);
-    if (ret <= 0) {
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Read failed");
-        return ESP_FAIL;
-    }
-    buf[ret] = '\0';
+    char buf[FORM_BODY_MAX_LEN] = {0};
+    char ssid_val[SSID_BUF_LEN] = {0};
+    char pass_val[PASS_BUF_LEN] = {0};
 
-    /* 解析出ssid和password */
-    char ssid_val[64] = {0};
-    char pass_val[128] = {0};
-    char *p = strstr(buf, "ssid=");
-    if (!p) {
+    if (recv_request_body(req, buf, sizeof(buf)) != ESP_OK) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid request body");
+        return ESP_FAIL;
+    }
+
+    if (!get_form_value(buf, "ssid", ssid_val, sizeof(ssid_val)) || strlen(ssid_val) == 0) {
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing ssid");
         return ESP_FAIL;
     }
-    p += 5;  // 跳过 "ssid="
-    char *amp = strchr(p, '&');
-    if (amp) strncpy(ssid_val, p, amp - p);
-    else     strncpy(ssid_val, p, sizeof(ssid_val) - 1);
+    get_form_value(buf, "password", pass_val, sizeof(pass_val));
 
-    p = strstr(buf, "password=");
-    if (p) {
-        p += 9;  // 跳过 "password="
-        strncpy(pass_val, p, sizeof(pass_val) - 1);
-    }
+    strlcpy(s_received_ssid, ssid_val, sizeof(s_received_ssid));
+    strlcpy(s_received_pass, pass_val, sizeof(s_received_pass));
 
-    // URL解码：浏览器把空格变成+号，要还原回来
-    for (char *q = ssid_val; *q; q++) if (*q == '+') *q = ' ';
-    for (char *q = pass_val; *q; q++) if (*q == '+') *q = ' ';
-
-    strncpy(s_received_ssid, ssid_val, 31);
-    s_received_ssid[31] = '\0';
-    strncpy(s_received_pass, pass_val, 63);
-    s_received_pass[63] = '\0';
-
-    /* 保存到NVS（断电不丢） */
     nvs_handle_t nvs;
     if (nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs) == ESP_OK) {
         nvs_set_str(nvs, NVS_KEY_SSID, s_received_ssid);
@@ -133,7 +175,6 @@ static esp_err_t handle_post_config(httpd_req_t *req)
         ESP_LOGI(TAG, "Saved! SSID=%s", s_received_ssid);
     }
 
-    /* 通知main.c：收到WiFi信息了，去连接吧 */
     s_config_done = true;
     if (s_cb) s_cb(AP_CONFIG_STATE_GET_SSID_PWD);
 
@@ -141,11 +182,6 @@ static esp_err_t handle_post_config(httpd_req_t *req)
     httpd_resp_sendstr(req, "OK\n");
     return ESP_OK;
 }
-
-
-/* ================================================================
- * HTTP 服务器
- * ================================================================ */
 
 static void start_webserver(void)
 {
@@ -173,12 +209,6 @@ static void stop_webserver(void)
     }
 }
 
-
-/* ================================================================
- * 对外接口
- * ================================================================ */
-
-/* 启动配网：开热点 + 启网页服务器 */
 void ap_config_start(const char *ap_ssid, const char *ap_pass, p_ap_config_callback cb)
 {
     if (s_server) {
@@ -191,10 +221,10 @@ void ap_config_start(const char *ap_ssid, const char *ap_pass, p_ap_config_callb
     memset(s_received_ssid, 0, sizeof(s_received_ssid));
     memset(s_received_pass, 0, sizeof(s_received_pass));
 
-    /* 创建AP网卡（必须有，否则手机连上后拿不到IP，卡在"获取IP地址"） */
-    esp_netif_create_default_wifi_ap();
+    if (!s_ap_netif) {
+        s_ap_netif = esp_netif_create_default_wifi_ap();
+    }
 
-    /* 配置热点 */
     wifi_config_t wifi_config = {
         .ap = {
             .ssid_len = 0,
@@ -204,17 +234,13 @@ void ap_config_start(const char *ap_ssid, const char *ap_pass, p_ap_config_callb
             .beacon_interval = 100,
         },
     };
-    if (ap_ssid) {
-        strncpy((char *)wifi_config.ap.ssid, ap_ssid, 31);
-    } else {
-        strncpy((char *)wifi_config.ap.ssid, "ESP32_Config", 31);
-    }
+
+    strlcpy((char *)wifi_config.ap.ssid, ap_ssid ? ap_ssid : "ESP32_Config", sizeof(wifi_config.ap.ssid));
     if (ap_pass && strlen(ap_pass) >= 8) {
-        strncpy((char *)wifi_config.ap.password, ap_pass, 63);
+        strlcpy((char *)wifi_config.ap.password, ap_pass, sizeof(wifi_config.ap.password));
         wifi_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
     }
 
-    /* 切到AP+STA模式（既开热点又保留了连WiFi的能力），配置AP */
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
 
@@ -228,7 +254,6 @@ void ap_config_start(const char *ap_ssid, const char *ap_pass, p_ap_config_callb
     if (s_cb) s_cb(AP_CONFIG_STATE_WAITING);
 }
 
-/* 停止配网：关网页、关热点 */
 void ap_config_stop(void)
 {
     stop_webserver();
@@ -251,7 +276,6 @@ const char *ap_config_get_password(void)
     return s_received_pass;
 }
 
-/* 从NVS读取之前保存的WiFi配置 */
 bool ap_config_load_saved(void)
 {
     nvs_handle_t nvs;
