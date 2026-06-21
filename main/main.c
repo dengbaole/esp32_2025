@@ -34,7 +34,7 @@ void app_main(void) {
 	// esp_task_wdt_delete(NULL); // 删除当前任务的看门狗
 	// task_init();
 	// led_init();
-	// led_breath_init();
+	// led_breath_init()jjjj;
 
     //wifi
     nvs_flash_init();
@@ -55,7 +55,6 @@ void app_main(void) {
 		// vTaskDelay(pdMS_TO_TICKS(1000)); // 延时1秒
 		// gpio_set_level(GPIO_NUM_15,0);
 		// vTaskDelay(pdMS_TO_TICKS(1000)); // 延时1秒
-		esp_task_wdt_reset();  // Reset watchdog timer
-    	vTaskDelay(pdMS_TO_TICKS(1000));  //	
+		vTaskDelay(pdMS_TO_TICKS(1000));
 	}
 }

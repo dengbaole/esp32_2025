@@ -1,35 +1,64 @@
-| Supported Targets | ESP32 | ESP32-C2 | ESP32-C3 | ESP32-C6 | ESP32-H2 | ESP32-S2 | ESP32-S3 |
-| ----------------- | ----- | -------- | -------- | -------- | -------- | -------- | -------- |
+# ESP32-S3 硬件驱动项目
 
-# _Sample project_
+ESP32-S3 嵌入式开发项目，集成多种外设驱动和系统功能。
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+## 功能模块
 
-This is the simplest buildable example. The example is used by command `idf.py create-project`
-that copies the project to user specified path and set it's name. For more information follow the [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project)
+| 模块 | 文件 | 说明 |
+|------|------|------|
+| WiFi 管理 | `wifi_manager.c/h` | STA 模式连接，自动重连，状态回调 |
+| 按键驱动 | `button_drv.c/h` | 链表管理，短按/长按检测，软件消抖 |
+| GPIO 扩展 | `xl9555.c/h` | XL9555 I2C GPIO 扩展芯片驱动，中断回调 |
+| LED 驱动 | `led_drv.c/h` | LED 初始化、呼吸灯效果 |
+| 六轴传感器 | `esp32_s3_qmi8658.c/h` | QMI8658 加速度计+陀螺仪，倾角解算 |
+| 任务管理 | `task_handle.c/h` | FreeRTOS 任务/队列/信号量/事件管理 |
+| 主程序 | `main.c` | 系统入口，硬件初始化调度 |
 
+## 硬件
 
+- **主控**：ESP32-S3
+- **IMU**：QMI8658（I2C 地址 0x6A，SDA=GPIO1，SCL=GPIO2）
+- **GPIO 扩展**：XL9555（I2C 地址 0x20，INT=GPIO17，SDA=GPIO10，SCL=GPIO11）
 
-## How to use example
-We encourage the users to use the example as a template for the new projects.
-A recommended way is to follow the instructions on a [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project).
+## 快速开始
 
-## Example folder contents
+```bash
+# 激活 ESP-IDF
+source ~/esp/esp-idf/export.sh
 
-The project **sample_project** contains one source file in C language [main.c](main/main.c). The file is located in folder [main](main).
+# 编译
+idf.py build
 
-ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt`
-files that provide set of directives and instructions describing the project's source files and targets
-(executable, library, or both). 
+# 烧录（替换 /dev/ttyACM0 为实际串口）
+idf.py -p /dev/ttyACM0 flash
 
-Below is short explanation of remaining files in the project folder.
+# 查看串口输出
+idf.py -p /dev/ttyACM0 monitor
+```
+
+### 快捷别名（需先 source ~/.bashrc）
+
+```bash
+build    # 编译
+flash    # 烧录
+mon      # 串口输出
+bfm      # 编译 + 烧录 + 串口
+```
+
+## 项目结构
 
 ```
+├── main/
+│   ├── CMakeLists.txt        # 构建配置
+│   ├── main.c                # 主程序入口
+│   ├── wifi_manager.c/h      # WiFi 管理
+│   ├── button_drv.c/h        # 按键驱动
+│   ├── xl9555.c/h            # GPIO 扩展芯片
+│   ├── led_drv.c/h           # LED 驱动
+│   ├── esp32_s3_qmi8658.c/h  # IMU 六轴传感器
+│   ├── task_handle.c/h       # FreeRTOS 任务管理
+│   └── platform.h            # 公共头文件
 ├── CMakeLists.txt
-├── main
-│   ├── CMakeLists.txt
-│   └── main.c
-└── README.md                  This is the file you are currently reading
+├── sdkconfig
+└── README.md
 ```
-Additionally, the sample project contains Makefile and component.mk files, used for the legacy Make based build system. 
-They are not used or needed when building with CMake and idf.py.
