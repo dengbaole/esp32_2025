@@ -3,7 +3,6 @@
 
 #include "platform.h"
 
-
 void led_init(void);
 void led_breath_init(void);
 void set_effect_1(void);

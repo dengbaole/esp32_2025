@@ -4,10 +4,6 @@
 
 extern QueueHandle_t queue_handle;
 
-
 void task_init(void);
 
-
-
-
-#endif // !_TASK_HANDLE_H
+#endif  // !_TASK_HANDLE_H
