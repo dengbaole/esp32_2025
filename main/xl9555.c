@@ -16,9 +16,7 @@ static EventGroupHandle_t   xl9555_isr_event = NULL;
     (X)=(X)^(Y);\
 }while(0)
 
-#define XL9555_ISR_BIT    BIT0 
-#define LITTLE_ENDIAN   0
-#define BIG_ENDIAN      1
+
 
 //判断字节序
 static inline int check_endian(void)

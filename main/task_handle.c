@@ -111,7 +111,6 @@ void key_handle_simple(void* pvParameters) {
     
     int press_count = 0;
     int key_pressed = 0;
-    TickType_t last_press_time = 0;
     TickType_t last_release_time = 0;
     const TickType_t reset_delay = pdMS_TO_TICKS(400); // 0.4秒
     
@@ -121,8 +120,7 @@ void key_handle_simple(void* pvParameters) {
         if(level == 0 && key_pressed == 0) {
             // 按键按下
             key_pressed = 1;
-            last_press_time = xTaskGetTickCount();
-            
+
             press_count++;
             if(press_count > 5) {
                 press_count = 5;

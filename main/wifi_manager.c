@@ -18,6 +18,20 @@ static p_wifi_state_callback    wifi_state_cb = NULL;
 //当前sta连接状态
 static bool is_sta_connected = false;
 
+
+
+void wifi_state_handler(WIFI_STATE state)
+{
+    if(state == WIFI_STATE_CONNECTED)
+    {
+        ESP_LOGI(TAG,"Wifi connect success!");
+    }
+    else
+    {
+        ESP_LOGI(TAG,"Wifi disconnect! ");
+    }
+}
+
 /** 事件回调函数
  * @param arg   用户传递的参数
  * @param event_base    事件类别

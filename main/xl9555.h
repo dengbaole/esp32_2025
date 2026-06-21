@@ -3,6 +3,13 @@
 
 #include "platform.h"
 
+#define XL9555_ISR_BIT    BIT0 
+#ifndef LITTLE_ENDIAN
+#define LITTLE_ENDIAN   0
+#endif
+#ifndef BIG_ENDIAN
+#define BIG_ENDIAN      1
+#endif
 
 /* XL9555命令宏 */
 #define XL9555_INPUT_PORT0_REG      0                               /* 输入寄存器0地址 */

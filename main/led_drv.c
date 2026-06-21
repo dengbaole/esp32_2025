@@ -1,14 +1,11 @@
 #include "led_drv.h"
 
-static const char* TAG = "led_drv";
-
-
 void led_init(void) {
-	  gpio_config_t io_conf = {
+    gpio_config_t io_conf = {
         .mode = GPIO_MODE_OUTPUT,
         .pin_bit_mask = (1ULL << GPIO_NUM_15),
     };
-    esp_err_t ret = gpio_config(&io_conf);
+    ESP_ERROR_CHECK(gpio_config(&io_conf));
 }
 
 

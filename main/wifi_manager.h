@@ -3,6 +3,9 @@
 #include "esp_err.h"
 #include "esp_wifi.h"
 
+#define DEFAULT_WIFI_SSID           "802"
+#define DEFAULT_WIFI_PASSWORD       "aa1550555930"
+
 typedef enum {
     WIFI_STATE_CONNECTED,
     WIFI_STATE_DISCONNECTED,
@@ -11,6 +14,7 @@ typedef enum {
 //wifi状态变化回调函数
 typedef void(*p_wifi_state_callback)(WIFI_STATE state);
 
+void wifi_state_handler(WIFI_STATE state);
 /** 初始化wifi，默认进入STA模式
  * @param f wifi状态变化回调函数
  * @return 无 
