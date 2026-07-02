@@ -86,15 +86,16 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
 void wifi_manager_init(p_wifi_state_callback f) {
   ESP_ERROR_CHECK(esp_netif_init());  // 用于初始化tcpip协议栈
   ESP_ERROR_CHECK(
-      esp_event_loop_create_default());  // 创建一个默认系统事件调度循环，之后可以注册回调函数来处理系统的一些事件
+  esp_event_loop_create_default());  // 创建一个默认系统事件调度循环，之后可以注册回调函数来处理系统的一些事件
+  // 注册事件
+  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
+  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
   esp_netif_create_default_wifi_sta();   // 使用默认配置创建STA对象
   // 初始化WIFI
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
   ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-  // 注册事件
-  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
-  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
+
 
   wifi_state_cb = f;
   // 启动WIFI
