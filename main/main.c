@@ -2,13 +2,22 @@
 
 static const char* TAG = "main";
 
-void app_main(void) {
-	esp_task_wdt_delete(NULL); // 删除当前任务的看门狗
+static void on_key_event(key_id_t id, key_event_t event)
+{
+    if (event == KEY_PRESS) {
+        ESP_LOGI(TAG, "BOOT key pressed");
+    } else {
+        ESP_LOGI(TAG, "BOOT key released");
+    }
+}
 
-	task_init();
-	while(1) {
-		//ESP_LOGI(TAG, "Running task...");
-		esp_task_wdt_reset(); // 重置看门狗
-		vTaskDelay(pdMS_TO_TICKS(1000)); // 延时1秒
-	}
+void app_main(void) {
+    key_drv_init();
+    key_drv_register_cb(on_key_event);
+
+    task_init();
+    while(1) {
+        // ESP_LOGI(TAG, "main loop running");
+        vTaskDelay(pdMS_TO_TICKS(1000)); // 延时1秒
+    }
 }

@@ -1,29 +1,48 @@
+SHELL := /bin/bash
+IDF_PATH := $(HOME)/esp/esp-idf
 
+# 烧录端口：USB-JTAG（能自动进下载模式）
+FLASH_PORT ?= $(shell test -e /dev/ttyACM0 && echo /dev/ttyACM0 || echo /dev/ttyUSB0)
+# 监视端口：UART（printf 从这出，更稳定）
+MON_PORT ?= $(shell test -e /dev/ttyUSB0 && echo /dev/ttyUSB0 || echo /dev/ttyACM0)
+BAUD ?= 115200
 
-BUILD_DIR = build
-PICO_DIR = ./pico
+.PHONY: flash flash_only monitor build clean menuconfig erase
 
-.PHONY: clean default pico rebuild assets
+.ONESHELL:
 
-default: pico
+# 一键编译 + 烧录(USB-JTAG) + 串口监视(UART)
+flash:
+	source $(IDF_PATH)/export.sh
+	idf.py -p $(FLASH_PORT) build flash
+	idf.py -p $(MON_PORT) -b $(BAUD) monitor
 
-assets:
-	@echo Create Assets
-	./utils_bin/p2a-win-amd64.exe -q 0 -c rgb565 -in ./assets/UI -out $(PICO_DIR)/assets
+# 仅编译
+build:
+	source $(IDF_PATH)/export.sh
+	idf.py build
 
-pico:clean
-	cmake . -G Ninja -B$(BUILD_DIR) -S.
-	ninja -C $(BUILD_DIR)
+# 仅烧录（不重新编译）
+flash_only:
+	source $(IDF_PATH)/export.sh
+	idf.py -p $(FLASH_PORT) flash
 
+# 仅串口监视
+monitor:
+	source $(IDF_PATH)/export.sh
+	idf.py -p $(MON_PORT) -b $(BAUD) monitor
+
+# 清理
 clean:
-		@echo "Cleaning up build directory..."
-	@if exist $(BUILD_DIR) ( \
-		rmdir /s /q $(BUILD_DIR) \
-	) else ( \
-		echo Build directory does not exist: $(BUILD_DIR) \
-	)
+	source $(IDF_PATH)/export.sh
+	idf.py fullclean
 
-rebuild: clean pico
+# 配置界面
+menuconfig:
+	source $(IDF_PATH)/export.sh
+	idf.py menuconfig
 
-format:
-	./utils_bin/astyle.exe --project="./utils_bin/.astylerc" -r **.c,**.h --ignore-exclude-errors --exclude=_build --exclude=utils_bin --exclude=dist --exclude=utils -v -Q
+# 擦除整个 Flash
+erase:
+	source $(IDF_PATH)/export.sh
+	idf.py -p $(FLASH_PORT) erase_flash
