@@ -34,8 +34,8 @@ void task_handle2(void* pvParameters) {
 
 
 void task_init(void) {
-	test_event = xEventGroupCreate();
-	xTaskCreatePinnedToCore(task_handle1, "task_handle1", 2048, NULL, 10, NULL, 1);
-	xTaskCreatePinnedToCore(task_handle2, "task_handle2", 2048, NULL, 10, NULL, 1);
+	// test_event = xEventGroupCreate();
+	// xTaskCreatePinnedToCore(task_handle1, "task_handle1", 2048, NULL, 10, NULL, 1);
+	// xTaskCreatePinnedToCore(task_handle2, "task_handle2", 2048, NULL, 10, NULL, 1);
 }
 
