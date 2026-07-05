@@ -2,12 +2,17 @@
 
 static const char* TAG = "main";
 
-static void on_key_event(key_id_t id, key_event_t event)
-{
-    if (event == KEY_PRESS) {
-        ESP_LOGI(TAG, "BOOT key pressed");
-    } else {
-        ESP_LOGI(TAG, "BOOT key released");
+static void on_key_event(key_id_t id, key_event_t event) {
+   switch (id) {
+    case KEY_ID_BOOT:
+        if (event == KEY_PRESS) {
+            ESP_LOGI(TAG, "BOOT key pressed");
+        } else {
+            ESP_LOGI(TAG, "BOOT key released");
+        }
+        break;
+    default:
+        break;
     }
 }
 

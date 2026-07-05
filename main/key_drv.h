@@ -22,6 +22,9 @@ typedef enum {
 // 按键回调函数类型
 typedef void (*key_cb_t)(key_id_t id, key_event_t event);
 
+#define KEY_BOOT_GPIO       GPIO_NUM_0
+#define KEY_DEBOUNCE_MS     20
+
 // 初始化按键驱动
 void key_drv_init(void);
 
