@@ -50,6 +50,26 @@ void app_main(void) {
             }
             fclose(f);
         }
+
+// 顺序执行：先录音再播放（共用 I2S 时钟线，不能同时）
+#if defined(ENABLE_AUDIO) && defined(ENABLE_SPEAKER)
+        audio_drv_init();
+        audio_drv_record("/RECORD.WAV", 5);
+        audio_drv_deinit();
+
+        speaker_drv_init();
+        speaker_drv_set_volume(80);
+        speaker_drv_play("/RECORD.WAV");   // 播放刚才录的
+        speaker_drv_deinit();
+#elif defined(ENABLE_AUDIO)
+        audio_drv_init();
+        audio_drv_record("/RECORD.WAV", 5);
+        audio_drv_deinit();
+#elif defined(ENABLE_SPEAKER)
+        speaker_drv_init();
+        speaker_drv_play("/canon.pcm");
+        speaker_drv_deinit();
+#endif
     }
 #endif
 

@@ -25,5 +25,11 @@
 #ifdef ENABLE_SD
 #include "sd_drv.h"
 #endif
+#ifdef ENABLE_AUDIO
+#include "audio_drv.h"
+#endif
+#ifdef ENABLE_SPEAKER
+#include "speaker_drv.h"
+#endif
 
 #endif // !_TASK_HANDLE_H
