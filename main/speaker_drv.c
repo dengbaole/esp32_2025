@@ -1,4 +1,5 @@
 #include "speaker_drv.h"
+#include "pca9557_drv.h"
 #include "driver/i2s_std.h"
 #include "driver/i2c.h"
 #include "esp_log.h"
@@ -20,12 +21,6 @@ static const char *TAG = "speaker";
 #define ES8311_ADDR      (0x18)  // ES8311_ADDRRES_0
 #define ES8311_SAMPLE_RATE   (48000)
 #define ES8311_MCLK_FREQ     (ES8311_SAMPLE_RATE * 256)  // 12.288MHz
-
-// ---- PCA9557 IO 扩展器 ----
-#define PCA9557_ADDR     (0x19)
-#define PCA9557_REG_OUT  0x01
-#define PCA9557_REG_CFG  0x03
-#define PA_EN_BIT        BIT(1)
 
 // ---- ES8311 寄存器 ----
 #define ES8311_REG00_RESET    0x00
@@ -61,20 +56,6 @@ static esp_err_t es8311_write_reg(uint8_t reg, uint8_t val)
 static esp_err_t es8311_read_reg(uint8_t reg, uint8_t *val)
 {
     return i2c_master_write_read_device(I2C_NUM, ES8311_ADDR, &reg, 1, val, 1, pdMS_TO_TICKS(1000));
-}
-
-static esp_err_t pca9557_write_reg(uint8_t reg, uint8_t val)
-{
-    uint8_t buf[2] = {reg, val};
-    return i2c_master_write_to_device(I2C_NUM, PCA9557_ADDR, buf, 2, pdMS_TO_TICKS(1000));
-}
-
-// ---- PCA9557 IO 扩展器（控制功放使能）----
-static void pca9557_init(void)
-{
-    pca9557_write_reg(PCA9557_REG_CFG, 0xF8);  // IO0/1/2 输出, 其余输入
-    pca9557_write_reg(PCA9557_REG_OUT, PA_EN_BIT); // IO1=1，使能功放
-    ESP_LOGI(TAG, "PA enabled via PCA9557");
 }
 
 // ---- ES8311 初始化（裸 I2C 寄存器）----
@@ -229,7 +210,7 @@ void speaker_drv_init(void)
     i2s_tx_init();
     i2c_init();
     es8311_init();
-    pca9557_init();
+    pca9557_drv_set_bit(PCA9557_IO_PA_EN, 1);  // 使能功放
     ESP_LOGI(TAG, "Speaker driver ready");
 }
 

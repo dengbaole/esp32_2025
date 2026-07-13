@@ -31,5 +31,11 @@
 #ifdef ENABLE_SPEAKER
 #include "speaker_drv.h"
 #endif
+#ifdef ENABLE_LCD
+#include "lcd_drv.h"
+#endif
+#if defined(ENABLE_LCD) || defined(ENABLE_SPEAKER)
+#include "pca9557_drv.h"
+#endif
 
 #endif // !_TASK_HANDLE_H

@@ -1,4 +1,7 @@
 #include "platform.h"
+#ifdef ENABLE_LCD
+#include "yingwu.h"
+#endif
 
 static const char* TAG = "main";
 
@@ -31,6 +34,19 @@ void app_main(void) {
 
 #ifdef ENABLE_IMU
     imu_drv_init();
+#endif
+
+#ifdef ENABLE_LCD
+    lcd_drv_init();
+    lcd_drv_fill(0x001F);  // 蓝色背景
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    lcd_drv_fill(0x07E0);  // 绿色
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    lcd_drv_fill(0xF800);  // 红色
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    lcd_drv_fill(0x0000);  // 黑屏
+    vTaskDelay(pdMS_TO_TICKS(500));
+    lcd_drv_draw_bitmap(0, 0, 320, 240, (const uint16_t *)gImage_yingwu);
 #endif
 
 #ifdef ENABLE_SD
