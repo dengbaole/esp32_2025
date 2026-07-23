@@ -1,7 +1,7 @@
 #include "speaker_drv.h"
 #include "pca9557_drv.h"
+#include "i2c_bus.h"
 #include "driver/i2s_std.h"
-#include "driver/i2c.h"
 #include "esp_log.h"
 #include "esp_check.h"
 #include "freertos/FreeRTOS.h"
@@ -9,18 +9,14 @@
 
 static const char *TAG = "speaker";
 
-// ---- 硬件引脚（I2S 时钟与录音共用）----
-#define I2C_NUM          (0)
-#define I2C_SDA_IO       (1)
-#define I2C_SCL_IO       (2)
+// ---- I2S 时钟引脚 ----
 #define I2S_MCK_IO       (38)
 #define I2S_BCK_IO       (14)
 #define I2S_WS_IO        (13)
 
 // ---- ES8311 参数 ----
-#define ES8311_ADDR      (0x18)  // ES8311_ADDRRES_0
+#define ES8311_ADDR      (0x18)
 #define ES8311_SAMPLE_RATE   (48000)
-#define ES8311_MCLK_FREQ     (ES8311_SAMPLE_RATE * 256)  // 12.288MHz
 
 // ---- ES8311 寄存器 ----
 #define ES8311_REG00_RESET    0x00
@@ -45,17 +41,18 @@ static const char *TAG = "speaker";
 #define ES8311_REG37_DAC_EQ   0x37
 
 static i2s_chan_handle_t tx_chan = NULL;
+static i2c_master_dev_handle_t es8311_dev = NULL;
 
 // ---- I2C 底层 ----
 static esp_err_t es8311_write_reg(uint8_t reg, uint8_t val)
 {
     uint8_t buf[2] = {reg, val};
-    return i2c_master_write_to_device(I2C_NUM, ES8311_ADDR, buf, 2, pdMS_TO_TICKS(1000));
+    return i2c_master_transmit(es8311_dev, buf, 2, 100);
 }
 
 static esp_err_t es8311_read_reg(uint8_t reg, uint8_t *val)
 {
-    return i2c_master_write_read_device(I2C_NUM, ES8311_ADDR, &reg, 1, val, 1, pdMS_TO_TICKS(1000));
+    return i2c_master_transmit_receive(es8311_dev, &reg, 1, val, 1, 100);
 }
 
 // ---- ES8311 初始化（裸 I2C 寄存器）----
@@ -115,24 +112,6 @@ static void es8311_init(void)
     es8311_write_reg(ES8311_REG17_ADC_GAIN, 0xC8);
 
     ESP_LOGI(TAG, "ES8311 initialized (bare I2C)");
-}
-
-// ---- I2C 初始化（共用总线）----
-static void i2c_init(void)
-{
-    i2c_config_t conf = {
-        .mode = I2C_MODE_MASTER,
-        .sda_io_num = I2C_SDA_IO,
-        .sda_pullup_en = GPIO_PULLUP_ENABLE,
-        .scl_io_num = I2C_SCL_IO,
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = 100000,
-    };
-    ESP_ERROR_CHECK(i2c_param_config(I2C_NUM, &conf));
-    esp_err_t ret = i2c_driver_install(I2C_NUM, I2C_MODE_MASTER, 0, 0, 0);
-    if (ret != ESP_OK) {
-        ESP_LOGW(TAG, "I2C already installed, skip");
-    }
 }
 
 // ---- I2S 发送（标准 Philips 模式）----
@@ -208,9 +187,10 @@ void speaker_drv_set_volume(int vol)
 void speaker_drv_init(void)
 {
     i2s_tx_init();
-    i2c_init();
+    i2c_bus_init();
+    es8311_dev = i2c_bus_add_device(ES8311_ADDR);
     es8311_init();
-    pca9557_drv_set_bit(PCA9557_IO_PA_EN, 1);  // 使能功放
+    pca9557_drv_set_bit(PCA9557_IO_PA_EN, 1);
     ESP_LOGI(TAG, "Speaker driver ready");
 }
 

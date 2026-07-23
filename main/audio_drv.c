@@ -1,17 +1,13 @@
 #include "audio_drv.h"
 #include "format_wav.h"
+#include "i2c_bus.h"
 #include "driver/i2s_tdm.h"
 #include "driver/i2s_std.h"
-#include "driver/i2c.h"
 #include "esp_log.h"
 #include "esp_check.h"
+#include "freertos/FreeRTOS.h"
 
 static const char *TAG = "audio_drv";
-
-// ---- 硬件引脚 ----
-#define I2C_NUM            (0)
-#define I2C_SDA_IO         (1)
-#define I2C_SCL_IO         (2)
 
 #define I2S_MCK_IO         (38)
 #define I2S_BCK_IO         (14)
@@ -65,30 +61,13 @@ static const char *TAG = "audio_drv";
 #define SD_MOUNT_POINT     "/sdcard"
 
 static i2s_chan_handle_t rx_chan = NULL;
+static i2c_master_dev_handle_t es7210_dev = NULL;
 
-// ---- I2C 底层读写（与 QMI8658 模式完全一致）----
-static esp_err_t es7210_write_reg(uint8_t reg, uint8_t val) {
+// ---- I2C 底层读写 ----
+static esp_err_t es7210_write_reg(uint8_t reg, uint8_t val)
+{
     uint8_t buf[2] = {reg, val};
-    return i2c_master_write_to_device(I2C_NUM, ES7210_ADDR,
-                                      buf, sizeof(buf),
-                                      1000 / portTICK_PERIOD_MS);
-}
-
-// ---- I2C 初始化（与 IMU 共用总线）----
-static void i2c_init(void) {
-    i2c_config_t conf = {
-        .mode = I2C_MODE_MASTER,
-        .sda_io_num = I2C_SDA_IO,
-        .sda_pullup_en = GPIO_PULLUP_ENABLE,
-        .scl_io_num = I2C_SCL_IO,
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = 100000,
-    };
-    ESP_ERROR_CHECK(i2c_param_config(I2C_NUM, &conf));
-    esp_err_t ret = i2c_driver_install(I2C_NUM, I2C_MODE_MASTER, 0, 0, 0);
-    if (ret != ESP_OK) {
-        ESP_LOGW(TAG, "I2C already installed by IMU, skip");
-    }
+    return i2c_master_transmit(es7210_dev, buf, 2, 100);
 }
 
 // ---- I2S 初始化（TDM 模式，仅接收）----
@@ -226,7 +205,8 @@ esp_err_t audio_drv_record(const char *filename, int duration_sec) {
 
 void audio_drv_init(void) {
     i2s_init();
-    i2c_init();
+    i2c_bus_init();
+    es7210_dev = i2c_bus_add_device(ES7210_ADDR);
     es7210_init();
     ESP_LOGI(TAG, "Audio driver ready");
 }

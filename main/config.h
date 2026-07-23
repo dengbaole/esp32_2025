@@ -7,6 +7,7 @@
 #define ENABLE_IMU          // QMI8658 姿态传感器
 #define ENABLE_SD           // Micro SD 卡
 #define ENABLE_LCD          // ST7789 LCD 显示屏
+#define ENABLE_CAMERA      // GC0308 摄像头（依赖 esp32-camera 组件）
 #define ENABLE_AUDIO        // ES7210 音频录音
 #define ENABLE_SPEAKER      // ES8311 音频播放
 #define ENABLE_TASK_HANDLE  // FreeRTOS 事件系统演示

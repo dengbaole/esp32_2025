@@ -26,6 +26,13 @@ static void on_key_event(key_id_t id, key_event_t event)
 }
 #endif
 
+#ifdef ENABLE_CAMERA
+static void camera_on_frame(const uint16_t *buf, int w, int h)
+{
+    lcd_drv_draw_bitmap(0, 0, w, h, buf);
+}
+#endif
+
 void app_main(void) {
 #ifdef ENABLE_KEY
     key_drv_init();
@@ -38,7 +45,7 @@ void app_main(void) {
 
 #ifdef ENABLE_LCD
     lcd_drv_init();
-    lcd_drv_fill(0x001F);  // 蓝色背景
+    lcd_drv_fill(0x001F);  // 蓝色
     vTaskDelay(pdMS_TO_TICKS(1000));
     lcd_drv_fill(0x07E0);  // 绿色
     vTaskDelay(pdMS_TO_TICKS(1000));
@@ -47,6 +54,14 @@ void app_main(void) {
     lcd_drv_fill(0x0000);  // 黑屏
     vTaskDelay(pdMS_TO_TICKS(500));
     lcd_drv_draw_bitmap(0, 0, 320, 240, (const uint16_t *)gImage_yingwu);
+#endif
+
+#ifdef ENABLE_CAMERA
+    camera_drv_init();
+    camera_drv_start(camera_on_frame);  // 摄像头直显 LCD
+    vTaskDelay(pdMS_TO_TICKS(10000));   // 预览 10 秒
+    camera_drv_stop();
+    lcd_drv_fill(0x0000);
 #endif
 
 #ifdef ENABLE_SD
@@ -67,7 +82,6 @@ void app_main(void) {
             fclose(f);
         }
 
-// 顺序执行：先录音再播放（共用 I2S 时钟线，不能同时）
 #if defined(ENABLE_AUDIO) && defined(ENABLE_SPEAKER)
         audio_drv_init();
         audio_drv_record("/RECORD.WAV", 5);
@@ -75,7 +89,7 @@ void app_main(void) {
 
         speaker_drv_init();
         speaker_drv_set_volume(80);
-        speaker_drv_play("/RECORD.WAV");   // 播放刚才录的
+        speaker_drv_play("/RECORD.WAV");
         speaker_drv_deinit();
 #elif defined(ENABLE_AUDIO)
         audio_drv_init();

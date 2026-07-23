@@ -1,8 +1,8 @@
 #include "lcd_drv.h"
 #include "pca9557_drv.h"
+#include "i2c_bus.h"
 #include "driver/spi_master.h"
 #include "driver/ledc.h"
-#include "driver/i2c.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_vendor.h"
 #include "esp_lcd_panel_ops.h"
@@ -26,7 +26,7 @@ static const char *TAG = "lcd_drv";
 
 // ---- 背光 PWM ----
 #define BL_LEDC_CH          LEDC_CHANNEL_0
-#define BL_LEDC_TIMER       1
+#define BL_LEDC_TIMER       LEDC_TIMER_1
 
 static esp_lcd_panel_handle_t panel = NULL;
 
@@ -122,26 +122,10 @@ void lcd_drv_draw_bitmap(int x, int y, int w, int h, const uint16_t *data)
     esp_lcd_panel_draw_bitmap(panel, x, y, x + w, y + h, data);
 }
 
-// ---- I2C 初始化 ----
-static void i2c_init(void)
-{
-    i2c_config_t conf = {
-        .mode = I2C_MODE_MASTER,
-        .sda_io_num = GPIO_NUM_1,
-        .sda_pullup_en = GPIO_PULLUP_ENABLE,
-        .scl_io_num = GPIO_NUM_2,
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = 100000,
-    };
-    ESP_ERROR_CHECK(i2c_param_config(I2C_NUM_0, &conf));
-    esp_err_t ret = i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
-    if (ret != ESP_OK) ESP_LOGW(TAG, "I2C already installed");
-}
-
 // ---- 对外接口 ----
 void lcd_drv_init(void)
 {
-    i2c_init();
+    i2c_bus_init();
     pca9557_drv_init();
     backlight_init();
     st7789_init();

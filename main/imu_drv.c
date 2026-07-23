@@ -1,5 +1,5 @@
 #include "imu_drv.h"
-#include "driver/i2c.h"
+#include "i2c_bus.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -36,38 +36,19 @@ enum qmi8658_reg {
     QMI8658_RESET = 0x60,   // 复位
 };
 
-#define QMI8658_ADDR     0x6A
-#define I2C_MASTER_NUM   I2C_NUM_0
-#define I2C_FREQ_HZ      100000
+#define QMI8658_ADDR  0x6A
+static i2c_master_dev_handle_t qmi8658_dev = NULL;
 
 // ---- I2C 底层读写 ----
-
-static esp_err_t qmi8658_read_reg(uint8_t reg, uint8_t *data, size_t len) {
-    return i2c_master_write_read_device(I2C_MASTER_NUM, QMI8658_ADDR,
-                                        &reg, 1, data, len,
-                                        1000 / portTICK_PERIOD_MS);
+static esp_err_t qmi8658_read_reg(uint8_t reg, uint8_t *data, size_t len)
+{
+    return i2c_master_transmit_receive(qmi8658_dev, &reg, 1, data, len, 100);
 }
 
-static esp_err_t qmi8658_write_reg(uint8_t reg, uint8_t data) {
+static esp_err_t qmi8658_write_reg(uint8_t reg, uint8_t data)
+{
     uint8_t buf[2] = {reg, data};
-    return i2c_master_write_to_device(I2C_MASTER_NUM, QMI8658_ADDR,
-                                      buf, sizeof(buf),
-                                      1000 / portTICK_PERIOD_MS);
-}
-
-// ---- I2C 初始化 ----
-
-static void i2c_init(void) {
-    i2c_config_t conf = {
-        .mode = I2C_MODE_MASTER,
-        .sda_io_num = IMU_I2C_SDA,
-        .sda_pullup_en = GPIO_PULLUP_ENABLE,
-        .scl_io_num = IMU_I2C_SCL,
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = I2C_FREQ_HZ,
-    };
-    i2c_param_config(I2C_MASTER_NUM, &conf);
-    ESP_ERROR_CHECK(i2c_driver_install(I2C_MASTER_NUM, conf.mode, 0, 0, 0));
+    return i2c_master_transmit(qmi8658_dev, buf, 2, 100);
 }
 
 // ---- QMI8658 初始化 ----
@@ -135,7 +116,7 @@ void imu_drv_read_angle(t_sQMI8658 *p) {
 // ---- 初始化入口 ----
 
 void imu_drv_init(void) {
-    i2c_init();
-    ESP_LOGI(TAG, "I2C initialized");
+    i2c_bus_init();
+    qmi8658_dev = i2c_bus_add_device(QMI8658_ADDR);
     qmi8658_init();
 }
