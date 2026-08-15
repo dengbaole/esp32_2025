@@ -23,6 +23,8 @@ make clean          # 清理
 #define ENABLE_KEY          // BOOT 按键驱动
 #define ENABLE_IMU          // QMI8658 姿态传感器
 #define ENABLE_SD           // Micro SD 卡
+#define ENABLE_LCD          // ST7789 LCD 显示屏
+#define ENABLE_CAMERA       // GC0308 摄像头（裸写，不依赖组件）
 #define ENABLE_AUDIO        // ES7210 音频录音
 #define ENABLE_SPEAKER      // ES8311 音频播放
 #define ENABLE_TASK_HANDLE  // FreeRTOS 事件系统演示
@@ -66,11 +68,16 @@ make clean          # 清理
 │   ├── config.h             # 模块开关
 │   ├── platform.h           # 公共头文件
 │   ├── main.c               # 应用入口
+│   ├── i2c_bus.c / .h       # 共享 I2C 总线（新 API）
+│   ├── pca9557_drv.c / .h   # PCA9557 IO 扩展器
 │   ├── key_drv.c / .h       # BOOT 按键驱动
 │   ├── imu_drv.c / .h       # QMI8658 姿态传感器驱动
 │   ├── sd_drv.c / .h        # Micro SD 卡驱动
 │   ├── audio_drv.c / .h     # ES7210 音频录音驱动
 │   ├── speaker_drv.c / .h   # ES8311 音频播放驱动
+│   ├── lcd_drv.c / .h       # ST7789 LCD 驱动
+│   ├── gc0308_drv.c / .h    # GC0308 传感器驱动（裸 I2C 寄存器）
+│   ├── camera_drv.c / .h    # 摄像头采集驱动（LCD_CAM + GDMA）
 │   ├── format_wav.h         # WAV 文件头
 │   └── task_handle.c / .h   # FreeRTOS 事件系统演示
 └── README.md
@@ -109,3 +116,11 @@ make clean          # 清理
 - 从 SD 卡读 WAV/PCM 文件播放
 - PCA9557 IO 扩展器控制功放使能
 - 音量范围 0-100（默认 70%）
+
+### GC0308 摄像头 (gc0308_drv + camera_drv)
+
+- 已去组件化：不再依赖 esp32-camera，`managed_components/` 只留作学习对照
+- `gc0308_drv.c`：传感器层，I2C(0x21) 软复位 + 239 条默认寄存器 + RGB565 + QVGA 1/2 子采样
+- `camera_drv.c`：控制器层，LEDC 产生 24MHz XCLK，LCD_CAM 接收 DVP，GDMA 环形描述符直接写 PSRAM 双缓冲
+- VSYNC 中断状态机：第一个 VSYNC 武装 DMA，之后每个 VSYNC 表示一帧完成并回调
+- API 与原来完全一致：`camera_drv_init / start(cb) / stop`

@@ -25,7 +25,7 @@ make clean        # 清理（会删 build/）
 #define ENABLE_IMU          // QMI8658 姿态传感器 (imu_drv)
 #define ENABLE_SD           // Micro SD 卡 (sd_drv)
 #define ENABLE_LCD          // ST7789 显示屏 (lcd_drv)
-#define ENABLE_CAMERA       // GC0308 摄像头 (camera_drv, 依赖本地 managed_components)
+#define ENABLE_CAMERA       // GC0308 摄像头 (camera_drv + gc0308_drv，裸写不依赖组件)
 #define ENABLE_AUDIO        // ES7210 录音 (audio_drv)
 #define ENABLE_SPEAKER      // ES8311 播放 (speaker_drv)
 #define ENABLE_TASK_HANDLE  // FreeRTOS 演示 (task_handle)
@@ -49,7 +49,7 @@ make clean        # 清理（会删 build/）
 ## I2C 总线（新 API 共享总线）
 
 - `i2c_bus.h/c` 是共享 I2C 主总线（GPIO1/2，100kHz），所有驱动通过 `i2c_bus_add_device(addr)` 注册设备
-- 设备地址：QMI8658=0x6A, ES7210=0x41, ES8311=0x18, PCA9557=0x19
+- 设备地址：QMI8658=0x6A, ES7210=0x41, ES8311=0x18, PCA9557=0x19, GC0308=0x21
 - **不要**用旧 API `driver/i2c.h`（会跟摄像头新 API 冲突）
 - PCA9557 IO 扩展器控制 LCD_CS(IO0)/PA_EN(IO1)/DVP_PWDN(IO2)，用 `pca9557_drv_set_bit`
 
@@ -60,8 +60,10 @@ make clean        # 清理（会删 build/）
 
 ## 摄像头
 
-- GC0308，DVP 8位并口，320x240 RGB565
-- 依赖 `managed_components/` 里的 esp32-camera（本地拷贝，联网装不了）
+- GC0308，DVP 8 位并口，320x240 RGB565，已改为**裸写驱动**，不依赖 esp32-camera 组件
+- `gc0308_drv.c/h`：传感器层，I2C(0x21) 寄存器表 + QVGA 子采样配置
+- `camera_drv.c`：控制器层，LCD_CAM + GDMA 直接写 PSRAM 双缓冲，VSYNC 中断状态机
+- `managed_components/` 里的 esp32-camera 保留作学习对照，不参与编译
 - 摄像头用 I2C 新 API，是所有 I2C 迁移到新总线的原因
 
 ## 屏幕方向
