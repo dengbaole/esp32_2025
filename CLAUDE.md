@@ -2,6 +2,11 @@
 
 芯片：ESP32-S3 (QFN56)，Flash 16MB，PSRAM 8MB（Octal），ESP-IDF v5.4.2
 
+## 工作约定
+
+- **不要自动 git commit**：代码改完先让用户看效果/确认，由用户自己提交
+- 代码注释用中文，只加关键位置；能裸写驱动就不引外部组件
+
 ## 构建与烧录
 
 ```bash
@@ -15,6 +20,7 @@ make clean        # 清理（会删 build/）
 - ESP-IDF 路径：`~/esp/esp-idf`，用 makefile 里 source export.sh
 - 烧录用 `/dev/ttyACM0`（USB-JTAG），监视用 `/dev/ttyUSB0`（CH342 UART）
 - 串口被占用时先 `fuser -k /dev/ttyUSB0 /dev/ttyACM0`
+- 开 LVGL 后固件变大，`partitions.csv` 给 app 分了 4MB；改了分区表需重新烧录分区表
 
 ## 模块架构
 
@@ -26,6 +32,7 @@ make clean        # 清理（会删 build/）
 #define ENABLE_SD           // Micro SD 卡 (sd_drv)
 #define ENABLE_LCD          // ST7789 显示屏 (lcd_drv)
 #define ENABLE_CAMERA       // GC0308 摄像头 (camera_drv + gc0308_drv，裸写不依赖组件)
+#define ENABLE_LVGL         // LVGL 图形库 (lvgl_drv，复用 lcd_drv)
 #define ENABLE_AUDIO        // ES7210 录音 (audio_drv)
 #define ENABLE_SPEAKER      // ES8311 播放 (speaker_drv)
 #define ENABLE_TASK_HANDLE  // FreeRTOS 演示 (task_handle)
@@ -65,6 +72,14 @@ make clean        # 清理（会删 build/）
 - `camera_drv.c`：控制器层，LCD_CAM + GDMA 直接写 PSRAM 双缓冲，VSYNC 中断状态机
 - `managed_components/` 里的 esp32-camera 保留作学习对照，不参与编译
 - 摄像头用 I2C 新 API，是所有 I2C 迁移到新总线的原因
+
+## LVGL
+
+- `main/lvgl_drv.c/h`：复用 `lcd_drv` 已初始化好的 ST7789 panel/io，不重复初始化 LCD
+- 组件：`lvgl__lvgl`、`espressif__esp_lvgl_port`、`espressif__esp_lcd_touch(_ft5x06)` 为本地拷贝，走 `EXTRA_COMPONENT_DIRS`
+- 触摸 FT5x06(0x38) 走共享新 I2C 总线（`i2c_bus_add_device`），避免旧 API 冲突
+- 默认启动 `lv_demo_widgets()`；示例界面在摄像头 10s 预览结束后运行
+- `sdkconfig.defaults` 配有 LVGL 字体/示例选项
 
 ## 屏幕方向
 

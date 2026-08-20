@@ -29,6 +29,7 @@ static const char *TAG = "lcd_drv";
 #define BL_LEDC_TIMER       LEDC_TIMER_1
 
 static esp_lcd_panel_handle_t panel = NULL;
+static esp_lcd_panel_io_handle_t io = NULL;
 
 // ---- 背光 ----
 static void backlight_init(void)
@@ -66,8 +67,6 @@ void lcd_drv_set_backlight(int pct)
 // ---- ST7789 初始化 ----
 static void st7789_init(void)
 {
-    esp_lcd_panel_io_handle_t io = NULL;
-
     spi_bus_config_t bus_cfg = {
         .sclk_io_num = LCD_SCLK,
         .mosi_io_num = LCD_MOSI,
@@ -103,6 +102,16 @@ static void st7789_init(void)
     esp_lcd_panel_invert_color(panel, true);
     esp_lcd_panel_swap_xy(panel, true);
     esp_lcd_panel_mirror(panel, true, false);
+}
+
+esp_lcd_panel_handle_t lcd_drv_get_panel(void)
+{
+    return panel;
+}
+
+esp_lcd_panel_io_handle_t lcd_drv_get_io(void)
+{
+    return io;
 }
 
 void lcd_drv_fill(uint16_t color)

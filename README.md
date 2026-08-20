@@ -25,6 +25,7 @@ make clean          # 清理
 #define ENABLE_SD           // Micro SD 卡
 #define ENABLE_LCD          // ST7789 LCD 显示屏
 #define ENABLE_CAMERA       // GC0308 摄像头（裸写，不依赖组件）
+#define ENABLE_LVGL         // LVGL 图形库（复用 lcd_drv，启动 widgets 示例）
 #define ENABLE_AUDIO        // ES7210 音频录音
 #define ENABLE_SPEAKER      // ES8311 音频播放
 #define ENABLE_TASK_HANDLE  // FreeRTOS 事件系统演示
@@ -124,3 +125,11 @@ make clean          # 清理
 - `camera_drv.c`：控制器层，LEDC 产生 24MHz XCLK，LCD_CAM 接收 DVP，GDMA 环形描述符直接写 PSRAM 双缓冲
 - VSYNC 中断状态机：第一个 VSYNC 武装 DMA，之后每个 VSYNC 表示一帧完成并回调
 - API 与原来完全一致：`camera_drv_init / start(cb) / stop`
+
+### LVGL 图形库 (lvgl_drv)
+
+- 复用 `lcd_drv` 已初始化好的 ST7789 panel/io，不重复初始化 LCD/SPI
+- 触摸 FT5x06(0x38) 走共享新 I2C 总线，避免与摄像头/IMU 冲突
+- 默认运行 `lv_demo_widgets()` 示例；在摄像头预览结束后启动
+- 依赖本地组件：`lvgl__lvgl`、`espressif__esp_lvgl_port`、`espressif__esp_lcd_touch(_ft5x06)`
+- LVGL 固件较大，改用 `partitions.csv` 给 app 分 4MB

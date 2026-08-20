@@ -2,6 +2,9 @@
 #ifdef ENABLE_LCD
 #include "yingwu.h"
 #endif
+#ifdef ENABLE_LVGL
+#include "lvgl_drv.h"
+#endif
 
 static const char* TAG = "main";
 
@@ -62,6 +65,10 @@ void app_main(void) {
     vTaskDelay(pdMS_TO_TICKS(10000));   // 预览 10 秒
     camera_drv_stop();
     lcd_drv_fill(0x0000);
+#endif
+
+#ifdef ENABLE_LVGL
+    lvgl_drv_start();  // 摄像头预览结束后启动 LVGL 示例
 #endif
 
 #ifdef ENABLE_SD
